@@ -1,6 +1,5 @@
 node_modules/
 dist/
-.env*
 .DS_Store
 uploads/
 npm-debug.log*
@@ -9,3 +8,11 @@ yarn-error.log*
 pnpm-debug.log*
 .idea/
 .vscode/
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.*.local
+client/.env
+client/.env.local
+client/.env.*.local
