@@ -425,15 +425,19 @@ const AMBIENT_BACKGROUNDS = [
   { id: 'bokeh-orbs', name: 'Bokeh Orbs', desc: 'Soft glowing orbs drift with depth-of-field', icon: '✨', badge: 'Mobile Friendly' },
   { id: 'constellation', name: 'Constellation', desc: 'Connected stars form a drifting network', icon: '⭐', badge: 'Mobile Friendly' },
   { id: 'svg-draw', name: 'Self-Drawing Lines', desc: 'Geometric line art draws itself on load', icon: '✏️' },
+  { id: 'matrix-rain', name: 'Matrix Rain', desc: 'Cascading characters with neon glow', icon: '🟢', badge: 'Iconic' },
+  { id: 'neon-grid', name: 'Neon Grid', desc: 'Retro-futuristic perspective grid with glow', icon: '🔷', badge: 'Synthwave' },
+  { id: 'fireflies', name: 'Fireflies', desc: 'Magical floating light particles with warm glow', icon: '🪲', badge: 'Mobile Friendly' },
 ];
 
 const PHYSICS_BACKGROUNDS = [
   { id: 'webgl-fluid', name: 'WebGL Fluid', desc: 'GPU-powered fluid simulation reacting to cursor', icon: '🌀', badge: 'GPU Intensive — Best on Desktop', flagship: true },
-  { id: 'lanyard-card', name: 'Lanyard Card', desc: 'ID badge swings from a physics rope', icon: '🪪', badge: 'Best on Desktop', flagship: true },
+  { id: 'lanyard-card', name: 'Lanyard Card', desc: 'ID badge drops with bouncy balls from a physics rope', icon: '🪪', badge: 'Best on Desktop', flagship: true },
   { id: 'particle-explosion', name: 'Particle Explosion', desc: 'Dense particle field explodes on click', icon: '💥' },
   { id: 'cursor-ripple', name: 'Cursor Ripple', desc: 'Mouse movement creates ripple distortions', icon: '🌊' },
   { id: 'heat-distortion', name: 'Heat Distortion', desc: 'Shimmer and haze intensifies near cursor', icon: '🔥', badge: 'GPU Intensive — Best on Desktop' },
   { id: 'depth-parallax', name: 'Depth Parallax', desc: 'Multi-layer background reacts to cursor position', icon: '🏔️' },
+  { id: 'gravity-orbit', name: 'Gravitational Orbit', desc: 'Particles orbit your cursor like a black hole', icon: '🌌', badge: 'Premium' },
 ];
 
 const CURSOR_EFFECTS = [
