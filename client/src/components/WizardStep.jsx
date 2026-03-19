@@ -24,14 +24,14 @@ export default function WizardStep({ step, stepIndex, totalSteps, formData, upda
         {step.type === 'skills' && <SkillsStep formData={formData} updateFormData={updateFormData} />}
         {step.type === 'socials' && <SocialsStep formData={formData} updateFormData={updateFormData} />}
         {step.type === 'contact' && <ContactStep formData={formData} updateFormData={updateFormData} />}
-        {step.type === 'preview' && <PreviewStep html={previewHTML} isGenerating={isGenerating} onRegenerate={onRegenerate} />}
+        {step.type === 'preview' && <PreviewStep html={previewHTML} isGenerating={isGenerating} onRegenerate={onRegenerate} formData={formData} />}
       </div>
     </div>
   );
 }
 
 /* ---- Portfolio Preview ---- */
-function PreviewStep({ html, isGenerating, onRegenerate }) {
+function PreviewStep({ html, isGenerating, onRegenerate, formData }) {
   const iframeRef = useRef(null);
   const [viewMode, setViewMode] = useState('desktop');
 
