@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Users Collection
+    // Only the authenticated user can read or write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 2. Portfolios / Drafts Collection
+    // Users can only read, create, update, or delete their own portfolio drafts
+    match /portfolios/{portfolioId} {
+      // Allow read if the document belongs to the requesting user
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Allow create if the user is authenticated and the userId field matches their UID
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Allow update if the document already belongs to them, 
+      // and they aren't trying to change the userId to someone else
+      allow update: if request.auth != null 
+                    && resource.data.userId == request.auth.uid 
+                    && request.resource.data.userId == request.auth.uid;
+                    
+      // Allow delete if the document belongs to them
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // 3. Public Published Portfolios (Optional)
+    // If you add a feature to 'publish' a portfolio and make it visible to everyone
+    match /published_portfolios/{portfolioId} {
+      // Anyone can read published portfolios
+      allow read: if true;
+      
+      // Only the owner can write to it
+      allow write: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

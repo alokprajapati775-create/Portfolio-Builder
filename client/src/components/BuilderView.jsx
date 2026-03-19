@@ -30,18 +30,43 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
 
   const generatePreview = async () => {
     setIsGenerating(true);
+    setPreviewHTML(''); // clear old HTML first
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+
+      if (!res.ok) {
+        throw new Error(`Server responded with ${res.status}`);
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Server did not return JSON');
+      }
+
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.html) {
         setPreviewHTML(data.html);
+      } else {
+        throw new Error(data.error || 'No HTML returned');
       }
     } catch (err) {
       console.error('Preview generation failed:', err);
+      // Generate a minimal fallback preview so it's never blank
+      setPreviewHTML(`<!DOCTYPE html><html><head><style>
+        body { background: #0a0a1a; color: #fff; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px; }
+        h1 { font-size: 2rem; margin-bottom: 12px; background: linear-gradient(135deg, #7c3aed, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { color: #888; max-width: 400px; line-height: 1.6; }
+      </style></head><body>
+        <div>
+          <h1>Preview Unavailable</h1>
+          <p>Could not connect to the server. Make sure the backend is running on port 3001, then click "Regenerate".</p>
+          <p style="margin-top:16px;font-size:0.8rem;color:#555;">Error: ${err.message}</p>
+        </div>
+      </body></html>`);
     } finally {
       setIsGenerating(false);
     }

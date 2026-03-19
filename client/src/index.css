@@ -1120,3 +1120,193 @@ body {
   box-shadow: 0 2px 6px rgba(124, 58, 237, 0.5);
 }
 
+/* ============================================
+   Auth Modal
+   ============================================ */
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(6px);
+  animation: authFadeIn 0.2s ease;
+}
+@keyframes authFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.auth-modal {
+  background: #13131f;
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 20px;
+  padding: 36px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  animation: authSlideUp 0.3s ease;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+}
+@keyframes authSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.auth-modal-header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.auth-subtitle {
+  color: #888;
+  font-size: 0.88rem;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.auth-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.auth-close:hover { color: #fff; }
+
+.auth-google-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+.auth-google-btn:hover { background: rgba(255,255,255,0.1); border-color: #7c3aed; }
+.auth-google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-email-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: rgba(255,255,255,0.8);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.auth-email-btn:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: #444;
+  font-size: 0.82rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+
+.auth-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.3);
+  color: #fff;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.auth-input:focus { border-color: #7c3aed; }
+.auth-input::placeholder { color: rgba(255,255,255,0.3); }
+
+.auth-submit-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: opacity 0.2s;
+  font-family: inherit;
+}
+.auth-submit-btn:hover { opacity: 0.9; }
+.auth-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-switch {
+  text-align: center;
+  color: #777;
+  font-size: 0.88rem;
+  margin-top: 18px;
+}
+.auth-switch span {
+  color: #7c3aed;
+  cursor: pointer;
+  font-weight: 500;
+}
+.auth-switch span:hover { text-decoration: underline; }
+
+.auth-back {
+  text-align: center;
+  color: #555;
+  font-size: 0.82rem;
+  margin-top: 12px;
+  cursor: pointer;
+}
+.auth-back:hover { color: #aaa; }
+
+.auth-error {
+  background: rgba(255,0,0,0.08);
+  border: 1px solid rgba(255,0,0,0.2);
+  color: #ff6b6b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* Success toast */
+.success-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(5,150,105,0.95);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  z-index: 10000;
+  animation: toastIn 0.3s ease;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+

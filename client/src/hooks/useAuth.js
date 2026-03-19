@@ -1,32 +1,40 @@
 import { useState, useEffect } from 'react';
 import {
   onAuthStateChanged,
-  signInWithPopup,
   signOut,
 } from 'firebase/auth';
-import { auth, googleProvider } from '../config/firebase';
+import { auth } from '../config/firebase';
+import { loginWithGoogle, handleRedirectResult } from '../services/authService';
 
 export function useAuth() {
-  const [user, setUser] = useState(null);       // Firebase user object
-  const [loading, setLoading] = useState(true); // waiting for initial auth check
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Check for redirect result on mount (for mobile Google sign-in fallback)
+    handleRedirectResult().then(result => {
+      if (result.success && result.user) {
+        setUser(result.user);
+      }
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
     });
-    return unsubscribe; // cleanup on unmount
+    return unsubscribe;
   }, []);
 
   const signInWithGoogle = async () => {
     setError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError(err.message);
+      const result = await loginWithGoogle();
+      if (!result.success && result.error) {
+        setError(result.error);
       }
+    } catch (err) {
+      setError(err.message);
     }
   };
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import WelcomeScreen from './components/WelcomeScreen';
 import BuilderView from './components/BuilderView';
+import AuthModal from './components/AuthModal';
 import { useAuth } from './hooks/useAuth';
+import { logoutUser } from './services/authService';
 
 const INITIAL_DATA = {
   name: '',
@@ -40,8 +42,9 @@ export default function App() {
   const [hasDraft, setHasDraft] = useState(false);
   const [showDraftBanner, setShowDraftBanner] = useState(false);
   const [draftDate, setDraftDate] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const { user, loading, signInWithGoogle, logout } = useAuth();
+  const { user, loading } = useAuth();
 
   // Check for saved draft on mount
   useEffect(() => {
@@ -110,19 +113,25 @@ export default function App() {
   if (!started) {
     return (
       <>
-        <AuthHeader user={user} onSignIn={signInWithGoogle} onLogout={logout} />
+        <AuthHeader user={user} onOpenAuth={() => setShowAuthModal(true)} />
         <WelcomeScreen
           onStart={handleStart}
           hasDraft={hasDraft}
           onResumeDraft={loadDraft}
         />
+        {showAuthModal && (
+          <AuthModal
+            onSuccess={() => setShowAuthModal(false)}
+            onClose={() => setShowAuthModal(false)}
+          />
+        )}
       </>
     );
   }
 
   return (
     <>
-      <AuthHeader user={user} onSignIn={signInWithGoogle} onLogout={logout} />
+      <AuthHeader user={user} onOpenAuth={() => setShowAuthModal(true)} />
       {/* Draft Resume Banner */}
       {showDraftBanner && hasDraft && (
         <div style={{
@@ -149,6 +158,12 @@ export default function App() {
         updateFormData={updateFormData}
         saveDraft={saveDraft}
       />
+      {showAuthModal && (
+        <AuthModal
+          onSuccess={() => setShowAuthModal(false)}
+          onClose={() => setShowAuthModal(false)}
+        />
+      )}
     </>
   );
 }
@@ -156,8 +171,14 @@ export default function App() {
 /* ─────────────────────────────
    Auth Header
 ───────────────────────────── */
-function AuthHeader({ user, onSignIn, onLogout }) {
+function AuthHeader({ user, onOpenAuth }) {
   const [imgError, setImgError] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    setShowMenu(false);
+  };
 
   return (
     <div style={{
@@ -181,57 +202,87 @@ function AuthHeader({ user, onSignIn, onLogout }) {
 
       {/* Auth zone */}
       {user ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative' }}>
           {/* Avatar */}
-          {user.photoURL && !imgError ? (
-            <img
-              src={user.photoURL}
-              alt={user.displayName}
-              onError={() => setImgError(true)}
-              style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid #7c3aed', objectFit: 'cover' }}
-            />
-          ) : (
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 700, color: '#fff', border: '2px solid #7c3aed' }}>
-              {user.displayName ? user.displayName[0].toUpperCase() : '?'}
+          <div
+            onClick={() => setShowMenu(!showMenu)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', transition: 'background 0.2s' }}
+          >
+            {user.photoURL && !imgError ? (
+              <img
+                src={user.photoURL}
+                alt={user.displayName}
+                onError={() => setImgError(true)}
+                style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid #7c3aed', objectFit: 'cover' }}
+              />
+            ) : (
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 700, color: '#fff', border: '2px solid #7c3aed' }}>
+                {user.displayName ? user.displayName[0].toUpperCase() : user.email?.[0]?.toUpperCase() || '?'}
+              </div>
+            )}
+            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.88rem' }}>
+              {user.displayName?.split(' ')[0] || user.email?.split('@')[0] || 'User'}
+            </span>
+            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem' }}>▾</span>
+          </div>
+
+          {/* Dropdown */}
+          {showMenu && (
+            <div style={{
+              position: 'absolute', top: '100%', right: 0, marginTop: 8,
+              background: '#131320', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '10px', padding: '8px 0', minWidth: 180,
+              boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+              zIndex: 3000,
+            }}>
+              <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 4 }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{user.displayName || 'User'}</div>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{user.email}</div>
+              </div>
+              <button onClick={handleLogout} style={{
+                width: '100%', padding: '10px 16px', background: 'none', border: 'none',
+                color: '#ff6b6b', fontSize: '0.85rem', cursor: 'pointer', textAlign: 'left',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.target.style.background = 'rgba(255,107,107,0.1)'}
+              onMouseLeave={e => e.target.style.background = 'none'}
+              >
+                🚪 Sign Out
+              </button>
             </div>
           )}
-          <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.88rem' }}>
-            {user.displayName?.split(' ')[0] || 'User'}
-          </span>
-          <button
-            onClick={onLogout}
-            style={{ padding: '6px 14px', borderRadius: '6px', background: 'transparent', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.75)', cursor: 'pointer', fontSize: '0.82rem', transition: 'all 0.2s' }}
-            onMouseEnter={e => e.target.style.borderColor = 'rgba(255,255,255,0.5)'}
-            onMouseLeave={e => e.target.style.borderColor = 'rgba(255,255,255,0.18)'}
-          >
-            Sign out
-          </button>
         </div>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Google Sign-In button */}
           <button
-            onClick={onSignIn}
+            onClick={onOpenAuth}
             style={{
-              display: 'flex', alignItems: 'center', gap: 8,
               padding: '7px 16px', borderRadius: '8px',
-              background: '#fff', border: 'none',
-              color: '#3c4043', cursor: 'pointer',
-              fontSize: '0.85rem', fontWeight: 600,
-              boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+              background: 'transparent', border: '1px solid rgba(255,255,255,0.15)',
+              color: 'rgba(255,255,255,0.8)', cursor: 'pointer',
+              fontSize: '0.85rem', fontWeight: 500,
               transition: 'all 0.2s',
             }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.4)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.25)'}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'}
           >
-            {/* Google G icon */}
-            <svg width="16" height="16" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Sign in with Google
+            Log In
+          </button>
+          <button
+            onClick={onOpenAuth}
+            style={{
+              padding: '7px 16px', borderRadius: '8px',
+              background: 'linear-gradient(135deg, #7c3aed, #06b6d4)',
+              border: 'none',
+              color: '#fff', cursor: 'pointer',
+              fontSize: '0.85rem', fontWeight: 600,
+              boxShadow: '0 4px 14px rgba(124,58,237,0.3)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            Sign Up Free
           </button>
         </div>
       )}
