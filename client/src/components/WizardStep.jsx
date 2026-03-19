@@ -368,6 +368,45 @@ function ThemeSelectionStep({ formData, updateFormData }) {
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Text Body</span>
                       </label>
                     </div>
+
+                    {/* Typography & Animations */}
+                    <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '12px' }}>🖋️ Typography & Animations</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                        {/* Font Family */}
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Font Style</span>
+                          <select 
+                            value={formData.themePalette?.fontFamily || ''}
+                            onChange={(e) => updateFormData({ themePalette: { ...formData.themePalette, fontFamily: e.target.value } })}
+                            style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
+                          >
+                            <option value="">Theme Default (Auto)</option>
+                            <option value="'Inter', sans-serif">Inter (Modern & Clean)</option>
+                            <option value="'Space Grotesk', sans-serif">Space Grotesk (Techy)</option>
+                            <option value="'Playfair Display', serif">Playfair Display (Elegant)</option>
+                            <option value="'Fira Code', monospace">Fira Code (Developer)</option>
+                            <option value="'Outfit', sans-serif">Outfit (Geometric)</option>
+                          </select>
+                        </label>
+
+                        {/* Font Animation */}
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Text Entry Animation</span>
+                          <select 
+                            value={formData.themePalette?.fontAnimation || 'fade-up'}
+                            onChange={(e) => updateFormData({ themePalette: { ...formData.themePalette, fontAnimation: e.target.value } })}
+                            style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
+                          >
+                            <option value="fade-up">Fade Up (Classic)</option>
+                            <option value="blur-reveal">Blur Reveal (Modern)</option>
+                            <option value="slide-right">Slide Right (Dynamic)</option>
+                            <option value="zoom-out">Zoom Out (Impactful)</option>
+                            <option value="3d-flip">3D Flip (Creative)</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 )}
               </React.Fragment>

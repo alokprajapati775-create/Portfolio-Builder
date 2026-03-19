@@ -551,23 +551,24 @@ function generatePortfolioHTML(data) {
   <meta name="twitter:title" content="${data.name || 'Portfolio'} — ${data.portfolioType || 'Developer'}">
   <meta name="twitter:description" content="${data.bio || 'View my portfolio, projects and contact information.'}">
   ${data.profileImage ? `<meta name="twitter:image" content="${data.profileImage}">` : ''}
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --bg: ${theme.bg}; --bg2: ${theme.bgSecondary}; --accent: ${theme.accent};
       --accent-alt: ${theme.accentAlt}; --text: ${theme.text}; --text2: ${theme.textSecondary};
       --card: ${theme.card}; --gradient: ${theme.gradient};
+      --font-main: ${theme.fontFamily ? theme.fontFamily : (theme.font === 'monospace' ? '"Fira Code", "Courier New", monospace' : theme.font === 'serif' ? '"Playfair Display", "Georgia", serif' : "'Inter', sans-serif")};
     }
     html { scroll-behavior: smooth; }
-    body { font-family: ${theme.font === 'monospace' ? '"Fira Code", "Courier New", monospace' : theme.font === 'serif' ? '"Merriweather", "Georgia", serif' : "'Inter', sans-serif"}; background: var(--bg); color: var(--text); overflow-x: hidden; }
+    body { font-family: var(--font-main); background: var(--bg); color: var(--text); overflow-x: hidden; }
 
     .section { position: relative; z-index: 1; padding: 100px 5%; max-width: 1200px; margin: 0 auto; }
 
     /* Hero */
     .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
     .hero-badge { display: inline-block; padding: 8px 20px; border-radius: 50px; background: var(--card); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); font-size: 0.875rem; color: var(--text2); margin-bottom: 24px; }
-    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(3rem, 8vw, 6rem); font-weight: 800; line-height: 1.1; margin-bottom: 20px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero h1 { font-family: var(--font-main); font-size: clamp(3rem, 8vw, 6rem); font-weight: 800; line-height: 1.1; margin-bottom: 20px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .hero p { font-size: 1.25rem; color: var(--text2); max-width: 600px; line-height: 1.7; }
     ${data.profileImage ? `.hero-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); margin-bottom: 24px; }` : ''}
 
@@ -604,7 +605,17 @@ function generatePortfolioHTML(data) {
     footer { text-align: center; padding: 40px; color: var(--text2); font-size: 0.875rem; position: relative; z-index: 1; border-top: 1px solid rgba(255,255,255,0.05); }
 
     /* Animations */
-    ${!noAnim ? `.fade-in { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; } .fade-in.visible { opacity: 1; transform: translateY(0); }` : '.fade-in { opacity: 1; }'}
+    ${(() => {
+      if (noAnim) return '.fade-in { opacity: 1; }';
+      const fAnim = theme.fontAnimation || 'fade-up';
+      switch(fAnim) {
+        case 'blur-reveal': return '.fade-in { opacity: 0; filter: blur(10px); transform: scale(0.95); transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1); } .fade-in.visible { opacity: 1; filter: blur(0); transform: scale(1); }';
+        case 'slide-right': return '.fade-in { opacity: 0; transform: translateX(-40px); transition: all 0.7s ease-out; } .fade-in.visible { opacity: 1; transform: translateX(0); }';
+        case 'zoom-out': return '.fade-in { opacity: 0; transform: scale(1.1); transition: all 0.8s cubic-bezier(0.1, 0.9, 0.2, 1); } .fade-in.visible { opacity: 1; transform: scale(1); }';
+        case '3d-flip': return '.fade-in { opacity: 0; transform: perspective(1000px) rotateX(-45deg) translateY(20px); transform-origin: top; transition: all 0.9s cubic-bezier(0.2, 0.8, 0.2, 1); } .fade-in.visible { opacity: 1; transform: perspective(1000px) rotateX(0) translateY(0); }';
+        default: return '.fade-in { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; } .fade-in.visible { opacity: 1; transform: translateY(0); }';
+      }
+    })()}
 
     ${extraCSS}
 
