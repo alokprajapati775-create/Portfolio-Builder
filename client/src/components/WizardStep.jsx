@@ -188,18 +188,20 @@ function PortfolioTypeStep({ formData, updateFormData }) {
 
   return (
     <div className="portfolio-type-container">
-      <div className="option-grid">
-        {options.map((opt) => (
-          <div
-            key={opt.value}
-            className={`option-card ${formData.portfolioType === opt.value ? 'selected' : ''}`}
-            onClick={() => handleCategorySelect(opt.value)}
-          >
-            <div className="option-card-icon">{opt.icon}</div>
-            <div className="option-card-label">{opt.label}</div>
-            <div className="option-card-desc">{opt.desc}</div>
-          </div>
-        ))}
+      <div style={{ display: 'flex', justifyContent: 'center', minHeight: '300px', paddingTop: '40px' }}>
+        <DisplayCards
+          cards={options.map((opt) => ({
+            id: opt.value,
+            icon: opt.icon,
+            title: opt.label,
+            description: opt.desc,
+            subtitle: 'Category',
+          }))}
+          selectedValue={formData.portfolioType}
+          onSelect={(card) => handleCategorySelect(card.id)}
+          accentColor="#06b6d4"
+          accentAlt="#7c3aed"
+        />
       </div>
     </div>
   );
