@@ -137,10 +137,10 @@ export function generatePortfolioHTML(data) {
     bgJS+=`(function(){var cv=document.getElementById('wglC');if(!cv)return;var gl=null;try{gl=cv.getContext('webgl')||cv.getContext('experimental-webgl');}catch(e){}if(!gl){cv.style.display='none';var fb=document.getElementById('wglFb');if(fb)fb.style.display='block';return;}cv.width=innerWidth;cv.height=innerHeight;var t=0,mx=cv.width/2,my=cv.height/2;var vs='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';var fs='precision mediump float;uniform float t;uniform vec2 r;uniform vec2 m;void main(){vec2 uv=gl_FragCoord.xy/r;float d=length(uv-m/r);vec3 c1=vec3(${ga});vec3 c2=vec3(${ga2});float w=sin(uv.x*8.+t)*sin(uv.y*6.+t*1.1)*.5+.5;vec3 col=mix(c1,c2,w)*smoothstep(.7,0.,d)*.9;float e=sin(t*.5+uv.x*12.)*.03+.97;gl_FragColor=vec4(col*e,1.);}';function cs(ty,s){var sh=gl.createShader(ty);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}var pr=gl.createProgram();gl.attachShader(pr,cs(gl.VERTEX_SHADER,vs));gl.attachShader(pr,cs(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);gl.useProgram(pr);var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);var pa=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(pa);gl.vertexAttribPointer(pa,2,gl.FLOAT,false,0,0);var tU=gl.getUniformLocation(pr,'t'),rU=gl.getUniformLocation(pr,'r'),mU=gl.getUniformLocation(pr,'m');document.addEventListener('mousemove',function(e){mx=e.clientX;my=cv.height-e.clientY;});function frame(){t+=.015;gl.viewport(0,0,cv.width,cv.height);gl.uniform1f(tU,t);gl.uniform2f(rU,cv.width,cv.height);gl.uniform2f(mU,mx,my);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);requestAnimationFrame(frame);}frame();cv.addEventListener('webglcontextlost',function(e){e.preventDefault();cv.style.display='none';var fb=document.getElementById('wglFb');if(fb)fb.style.display='block';});addEventListener('resize',function(){cv.width=innerWidth;cv.height=innerHeight;});}());`;
   }
 
-  // LANYARD CARD (Matter.js Physics) with bouncy balls
+  // LANYARD CARD (Matter.js Physics) — interactive + slide-to-side
   if (!noAnim && variant==='lanyard-card') {
     bgHTML=`<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"><\/script>
-    <canvas id="matterC" style="position:fixed;inset:0;width:100%;height:100%;z-index:1;"></canvas>
+    <canvas id="matterC" style="position:fixed;inset:0;width:100%;height:100%;z-index:1;cursor:grab;"></canvas>
     <div id="lanyardEl" class="lanyard-card" style="opacity:0">
       <div class="lc-hole"></div>
       <div class="lc-pin"></div>
@@ -149,8 +149,9 @@ export function generatePortfolioHTML(data) {
       <div class="lc-role">${data.portfolioType||'Creative Developer'}</div>
       <div class="lc-divider"></div>
       <div class="lc-skills">${(data.skills||[]).slice(0,3).map(s=>`<span>${s}</span>`).join('')}</div>
-      <button onclick="document.querySelector('.content').scrollIntoView({behavior:'smooth'})" class="lc-btn">View Portfolio ↓</button>
-    </div>`;
+      <button id="viewPortBtn" class="lc-btn">View Portfolio ↓</button>
+    </div>
+    <button id="backBtn" class="back-btn" style="display:none">← Back</button>`;
     bgCSS+=`
     .lanyard-card{position:fixed;top:0;left:0;z-index:2;pointer-events:none;
       width:280px;height:400px;transform-origin:center center;
@@ -167,16 +168,35 @@ export function generatePortfolioHTML(data) {
     .lc-divider{width:60%;height:1px;background:rgba(255,255,255,.1);margin-bottom:14px;}
     .lc-skills{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:22px;}
     .lc-skills span{font-size:.68rem;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.06);}
-    .lc-btn{padding:11px 24px;border:none;background:linear-gradient(135deg,${a},${a2});color:#fff;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;pointer-events:auto;transition:all .2s;box-shadow:0 6px 20px ${a}55;}
-    .lc-btn:hover{transform:scale(1.08);box-shadow:0 8px 28px ${a}88;}`;
+    .lc-btn{padding:11px 24px;border:none;background:linear-gradient(135deg,${a},${a2});color:#fff;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;pointer-events:auto;transition:all .25s;box-shadow:0 6px 20px ${a}55;}
+    .lc-btn:hover{transform:scale(1.08);box-shadow:0 8px 28px ${a}88;}
+    .back-btn{position:fixed;top:24px;left:24px;z-index:999;padding:12px 28px;border:none;background:rgba(255,255,255,.08);
+      backdrop-filter:blur(12px);color:#fff;border-radius:12px;font-weight:700;font-size:.9rem;
+      cursor:pointer;border:1px solid rgba(255,255,255,.15);transition:all .3s;
+      box-shadow:0 4px 20px rgba(0,0,0,.3);opacity:0;animation:backBtnIn .5s ease forwards;}
+    .back-btn:hover{background:${a};border-color:${a};transform:scale(1.05);}
+    @keyframes backBtnIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+    .content{transition:opacity .8s ease,transform .8s ease;}
+    .content.hidden-content{opacity:0;transform:translateY(40px);pointer-events:none;}
+    .content.visible-content{opacity:1;transform:translateY(0);pointer-events:auto;}`;
     bgJS+=`
     window.addEventListener('load',function(){
       setTimeout(function(){
+        var lEl=document.getElementById('lanyardEl');
+        var viewBtn=document.getElementById('viewPortBtn');
+        var backBtn=document.getElementById('backBtn');
+        var contentEl=document.querySelector('.content');
+        var isSideMode=false;
+
         if(typeof Matter==='undefined'){
-          var lEl=document.getElementById('lanyardEl');
           if(lEl){lEl.style.opacity='1';lEl.style.cssText+='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);';}
+          if(viewBtn)viewBtn.onclick=function(){contentEl.classList.remove('hidden-content');contentEl.classList.add('visible-content');contentEl.scrollIntoView({behavior:'smooth'});};
           return;
         }
+
+        // Hide portfolio content initially
+        if(contentEl){contentEl.classList.add('hidden-content');}
+
         var M=Matter,eng=M.Engine.create({gravity:{x:0,y:1.2}}),world=eng.world;
         var cv=document.getElementById('matterC');
         if(!cv)return;
@@ -185,50 +205,53 @@ export function generatePortfolioHTML(data) {
           width:cv.width,height:cv.height,wireframes:false,background:'transparent',
           pixelRatio:window.devicePixelRatio||1
         }});
-        M.Render.run(rend);
-        M.Runner.run(M.Runner.create(),eng);
-        var lEl=document.getElementById('lanyardEl');
+        M.Render.run(rend);var runner=M.Runner.create();M.Runner.run(runner,eng);
 
-        // Card body — starts above viewport for drop effect
+        // Card body — starts above viewport for physics drop
         var cB=M.Bodies.rectangle(cv.width/2,-200,280,400,{
           render:{visible:false},density:.05,frictionAir:.025,
           restitution:.25,chamfer:{radius:24}
         });
 
-        // Lanyard rope (single rope from top center)
-        var ropeA={x:cv.width/2,y:-30};
+        // Rope anchor — center top
+        var anchorX=cv.width/2, anchorY=-30;
+        var targetAnchorX=anchorX;
         var rope=M.Constraint.create({
-          pointA:ropeA,bodyB:cB,pointB:{x:0,y:-180},
-          stiffness:.06,damping:.015,length:180,
-          render:{visible:true,strokeStyle:'${a}',lineWidth:5,type:'line'}
+          pointA:{x:anchorX,y:anchorY},bodyB:cB,pointB:{x:0,y:-180},
+          stiffness:.06,damping:.015,length:200,
+          render:{visible:true,strokeStyle:'${a}',lineWidth:5}
         });
 
-        // Walls and ground
+        // Boundaries
         var ground=M.Bodies.rectangle(cv.width/2,cv.height+40,cv.width*3,80,{isStatic:true,render:{visible:false}});
         var wallL=M.Bodies.rectangle(-40,cv.height/2,80,cv.height*2,{isStatic:true,render:{visible:false}});
         var wallR=M.Bodies.rectangle(cv.width+40,cv.height/2,80,cv.height*2,{isStatic:true,render:{visible:false}});
-
         M.Composite.add(world,[cB,rope,ground,wallL,wallR]);
 
-        // BOUNCY BALLS — drop from top with staggered timing
-        var ballColors=['${a}','${a2}','#ec4899','#f97316','#22c55e','#eab308','${a}','${a2}','#f43f5e','#3b82f6','#a855f7','#14b8a6','${a}','${a2}','#f59e0b'];
+        // BOUNCY BALLS — staggered drop
+        var balls=[];
+        var ballColors=['${a}','${a2}','#ec4899','#f97316','#22c55e','#eab308','#f43f5e','#3b82f6','#a855f7','#14b8a6','${a}','${a2}','#f59e0b','#06b6d4','#8b5cf6'];
         ballColors.forEach(function(col,i){
           setTimeout(function(){
-            var r=12+Math.floor(Math.random()*22);
+            var r=14+Math.floor(Math.random()*20);
             var ball=M.Bodies.circle(
-              cv.width*0.15+Math.random()*cv.width*0.7,
-              -50-Math.random()*300,
-              r,
-              {restitution:.7+Math.random()*.25,friction:.05,frictionAir:.005,
-               render:{fillStyle:col,strokeStyle:'rgba(255,255,255,0.2)',lineWidth:1}}
+              cv.width*0.15+Math.random()*cv.width*0.7,-50-Math.random()*300,r,
+              {restitution:.75+Math.random()*.2,friction:.04,frictionAir:.004,
+               render:{fillStyle:col,strokeStyle:'rgba(255,255,255,0.25)',lineWidth:2}}
             );
-            M.Body.setVelocity(ball,{x:(Math.random()-.5)*4,y:Math.random()*3});
-            M.Composite.add(world,ball);
-          },i*120);
+            M.Body.setVelocity(ball,{x:(Math.random()-.5)*5,y:Math.random()*4});
+            M.Composite.add(world,ball);balls.push(ball);
+          },i*130);
         });
 
-        // Show card
         if(lEl)lEl.style.opacity='1';
+
+        // Smoothly animate rope anchor position
+        M.Events.on(eng,'beforeUpdate',function(){
+          var dx=targetAnchorX-anchorX;
+          anchorX+=dx*0.04;
+          rope.pointA.x=anchorX;
+        });
 
         // Sync HTML card to physics body
         M.Events.on(eng,'afterUpdate',function(){
@@ -236,26 +259,60 @@ export function generatePortfolioHTML(data) {
           lEl.style.transform='translate(-50%,-50%) translate('+cB.position.x+'px,'+cB.position.y+'px) rotate('+cB.angle+'rad)';
         });
 
-        // Mouse interaction — lets user grab card and balls
+        // MOUSE INTERACTION — grab card and balls
         var mouse=M.Mouse.create(cv);
         var mc=M.MouseConstraint.create(eng,{
           mouse:mouse,
-          constraint:{stiffness:.15,render:{visible:false}}
+          constraint:{stiffness:.2,render:{visible:false}}
         });
         M.Composite.add(world,mc);
         rend.mouse=mouse;
 
-        // Keep mouse in sync with canvas
+        // Cursor feedback
+        cv.addEventListener('mousedown',function(){cv.style.cursor='grabbing';});
+        cv.addEventListener('mouseup',function(){cv.style.cursor='grab';});
+
+        // Allow page scroll past the physics canvas
         mouse.element.removeEventListener('mousewheel',mouse.mousewheel);
         mouse.element.removeEventListener('DOMMouseScroll',mouse.mousewheel);
 
-        // Resize handler
+        // VIEW PORTFOLIO — slide card to left side
+        if(viewBtn) viewBtn.onclick=function(e){
+          e.stopPropagation();
+          if(isSideMode)return;
+          isSideMode=true;
+          // Animate rope anchor to left
+          targetAnchorX=160;
+          // Give the card a little push
+          M.Body.setVelocity(cB,{x:-4,y:-2});
+          // Show portfolio content with animation
+          setTimeout(function(){
+            if(contentEl){contentEl.classList.remove('hidden-content');contentEl.classList.add('visible-content');}
+          },400);
+          // Show back button
+          if(backBtn){backBtn.style.display='block';}
+          // Change button text
+          viewBtn.textContent='Portfolio →';
+        };
+
+        // BACK — slide card back to center
+        if(backBtn) backBtn.onclick=function(){
+          isSideMode=false;
+          targetAnchorX=cv.width/2;
+          M.Body.setVelocity(cB,{x:3,y:-2});
+          // Hide portfolio content
+          if(contentEl){contentEl.classList.remove('visible-content');contentEl.classList.add('hidden-content');}
+          backBtn.style.display='none';
+          viewBtn.textContent='View Portfolio ↓';
+          window.scrollTo({top:0,behavior:'smooth'});
+        };
+
         window.addEventListener('resize',function(){
           cv.width=window.innerWidth;cv.height=window.innerHeight;
           rend.options.width=cv.width;rend.options.height=cv.height;
           M.Body.setPosition(ground,{x:cv.width/2,y:cv.height+40});
           M.Body.setPosition(wallR,{x:cv.width+40,y:cv.height/2});
-          rope.pointA={x:cv.width/2,y:-30};
+          if(!isSideMode)targetAnchorX=cv.width/2;
         });
       },500);
     });`;
