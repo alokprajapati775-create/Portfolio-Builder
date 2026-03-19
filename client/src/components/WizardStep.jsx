@@ -113,7 +113,7 @@ function PreviewStep({ html, isGenerating, onRegenerate }) {
           key={iframeKey}
           title="Portfolio Preview"
           srcDoc={html}
-          sandbox="allow-scripts allow-same-origin"
+          sandbox="allow-scripts"
           style={{
             width: getIframeWidth(), height: '70vh', border: 'none', background: '#0a0a1a',
             borderRadius: viewMode !== 'desktop' ? '12px' : '0',

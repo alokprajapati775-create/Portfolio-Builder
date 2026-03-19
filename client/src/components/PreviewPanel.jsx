@@ -91,6 +91,7 @@ export default function PreviewPanel({ html }) {
           <iframe
             ref={iframeRef}
             title="Portfolio Preview"
+            sandbox="allow-scripts"
             style={getIframeStyle()}
           />
         </div>
