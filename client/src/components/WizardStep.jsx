@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { FiGithub, FiLinkedin, FiInstagram, FiTwitter, FiGlobe, FiPlus, FiX, FiUpload, FiMonitor, FiSmartphone, FiTablet, FiRefreshCw } from 'react-icons/fi';
 import { allThemes } from '../config/themesData';
 import { getAvatarsForCategory } from '../utils/avatarUtils';
+import DisplayCards from './DisplayCards';
 
 export default function WizardStep({ step, stepIndex, totalSteps, formData, updateFormData, previewHTML, isGenerating, onRegenerate }) {
   return (
@@ -473,26 +474,21 @@ function AnimationModeStep({ formData, updateFormData }) {
 
   return (
     <div className="animation-mode-step">
-      {/* Primary Mode Selection */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '30px' }}>
-        {modes.map((opt) => (
-          <div
-            key={opt.value}
-            className={`animation-main-card ${currentMode === opt.value ? 'selected' : ''}`}
-            onClick={() => handleModeSelect(opt.value)}
-            style={{ 
-              borderColor: currentMode === opt.value ? opt.color : 'rgba(255,255,255,0.05)',
-              background: currentMode === opt.value ? `${opt.color}15` : 'rgba(255,255,255,0.02)',
-              boxShadow: currentMode === opt.value ? `0 0 25px ${opt.color}25` : 'none',
-              '--card-accent': opt.color
-            }}
-          >
-            <div className="card-tag">{opt.tag}</div>
-            <div className="card-icon">{opt.icon}</div>
-            <div className="card-label">{opt.label}</div>
-            <div className="card-desc">{opt.desc}</div>
-          </div>
-        ))}
+      {/* 3D Stacked Mode Selection */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px', minHeight: '260px' }}>
+        <DisplayCards
+          cards={modes.map(m => ({
+            id: m.value,
+            icon: m.icon,
+            title: m.label,
+            description: m.desc,
+            subtitle: m.tag,
+          }))}
+          selectedValue={currentMode}
+          onSelect={(card) => handleModeSelect(card.id)}
+          accentColor={modes.find(m => m.value === currentMode)?.color || '#7c3aed'}
+          accentAlt="#06b6d4"
+        />
       </div>
 
       {/* Style / Background Variant Selector */}
