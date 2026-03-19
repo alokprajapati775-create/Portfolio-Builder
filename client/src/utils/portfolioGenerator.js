@@ -364,17 +364,6 @@ export function generatePortfolioHTML(data) {
 
   /* ── Universal 3D enhancements (always added) ── */
   const universalJS = `
-// Custom Glowing Cursor
-(function(){
-  var cur=document.createElement('div');cur.id='gcur';document.body.appendChild(cur);
-  var trail=document.createElement('div');trail.id='gcurT';document.body.appendChild(trail);
-  var px=innerWidth/2,py=innerHeight/2,tx=px,ty=py;
-  document.addEventListener('mousemove',function(e){px=e.clientX;py=e.clientY;});
-  function animCur(){tx+=(px-tx)*.18;ty+=(py-ty)*.18;cur.style.cssText='position:fixed;left:'+(px-8)+'px;top:'+(py-8)+'px;width:16px;height:16px;border-radius:50%;background:${a};pointer-events:none;z-index:99999;mix-blend-mode:screen;transition:transform .2s;';trail.style.cssText='position:fixed;left:'+(tx-20)+'px;top:'+(ty-20)+'px;width:40px;height:40px;border-radius:50%;border:2px solid ${a}66;pointer-events:none;z-index:99998;transition:width .3s,height .3s;';requestAnimationFrame(animCur);}
-  animCur();
-  document.querySelectorAll('a,button,.proj-card,.skill-chip,.soc-btn').forEach(function(el){el.addEventListener('mouseenter',function(){cur.style.transform='scale(2.5)';trail.style.width='60px';trail.style.height='60px';});el.addEventListener('mouseleave',function(){cur.style.transform='scale(1)';trail.style.width='40px';trail.style.height='40px';});});
-})();
-
 // 3D Tilt on project cards
 (function(){
   document.querySelectorAll('.proj-card').forEach(function(card){
@@ -439,8 +428,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
   @keyframes glitch1{0%,100%{clip-path:inset(100% 0 0 0)}10%{clip-path:inset(15% 0 60% 0)}20%{clip-path:inset(70% 0 10% 0)}30%{clip-path:inset(40% 0 80% 0)}40%{clip-path:inset(0 0 100% 0)}50%{clip-path:inset(100% 0 0 0)}}
   @keyframes glitch2{0%,100%{clip-path:inset(0 0 100% 0)}15%{clip-path:inset(80% 0 0 0)}25%{clip-path:inset(20% 0 50% 0)}35%{clip-path:inset(60% 0 20% 0)}45%{clip-path:inset(0 0 100% 0)}}
 
-  /* Custom cursor hidden on mobile */
-  @media(hover:none){#gcur,#gcurT{display:none!important}}
+  /* End of universal config */
   `;
 
   const loadingScreen = `<div id="loadScreen"><div class="ls-logo">${data.name?.split(' ')[0]||'Portfolio'}</div><div class="ls-bar"><div class="ls-fill"></div></div></div>`;
@@ -474,8 +462,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
     :root{--bg:${theme.bg};--bg2:${theme.bgSecondary};--accent:${a};--accent2:${a2};--text:${theme.text};--text2:${theme.textSecondary};--card:${theme.card};--grad:${theme.gradient};--radius:16px;}
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     html{scroll-behavior:smooth}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none}
-    @media(hover:none){body{cursor:auto}}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
     .content{position:relative;z-index:5}
     .section{padding:110px 8% 80px;max-width:1300px;margin:0 auto}
     .section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.5rem,5vw,3.8rem);font-weight:800;margin-bottom:50px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -487,9 +474,6 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
     .hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(4rem,10vw,8rem);font-weight:800;line-height:.9;margin-bottom:24px;animation:heroTitleIn .9s ease .5s both}
     @keyframes heroTitleIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
     .hero-bio{font-size:1.3rem;color:var(--text2);max-width:640px;line-height:1.8;margin-bottom:48px;animation:heroTitleIn .9s ease .7s both}
-    .scroll-cue{display:flex;flex-direction:column;align-items:flex-start;gap:8px;color:${theme.textSecondary};font-size:.8rem;letter-spacing:1.5px;text-transform:uppercase;animation:heroTitleIn .9s ease 1.2s both}
-    .scroll-cue-line{width:1px;height:56px;background:linear-gradient(to bottom,${a},transparent);animation:scrollLine 2s ease infinite}
-    @keyframes scrollLine{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
 
     /* Skills */
     .skills-wrap{display:flex;flex-wrap:wrap;gap:12px}
@@ -526,7 +510,6 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
       ${data.profileImageUrl?`<img src="${data.profileImageUrl}" class="hero-avatar" alt="${data.name}"/>`:''}
       <h1 class="glitch" data-text="${data.name||'Your Name'}">${data.name||'Your Name'}</h1>
       <p class="hero-bio">${data.bio||'Building extraordinary digital experiences that leave a lasting impression on the world.'}</p>
-      <div class="scroll-cue"><span>Scroll</span><div class="scroll-cue-line"></div></div>
     </section>
     ${skills?`<section class="section" id="skills"><h2 class="section-title reveal">Expertise</h2><div class="skills-wrap">${skills}</div></section>`:''}
     ${projects?`<section class="section" id="projects"><h2 class="section-title reveal">Featured Work</h2><div class="proj-grid">${projects}</div></section>`:''}

@@ -440,11 +440,6 @@ const PHYSICS_BACKGROUNDS = [
   { id: 'gravity-orbit', name: 'Gravitational Orbit', desc: 'Particles orbit your cursor like a black hole', icon: '🌌', badge: 'Premium' },
 ];
 
-const CURSOR_EFFECTS = [
-  { id: 'default', name: 'Default', desc: 'Standard cursor' },
-  { id: 'vortex', name: 'Vortex Trail', desc: 'Swirling particle trail' },
-];
-
 const NO_ANIMATION_BACKGROUNDS = [
   { id: 'none', name: 'Solid Color', desc: 'Minimal solid theme color', icon: '⬛' },
   { id: 'static-gradient', name: 'Soft Gradient', desc: 'Elegant linear gradient', icon: '🎨' },
@@ -524,30 +519,6 @@ function AnimationModeStep({ formData, updateFormData }) {
                   </span>
                 )}
                 {formData.backgroundVariant === bg.id && <div className="selected-glow" />}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Cursor Effect Selector - Physics Only */}
-      {currentMode === 'physics' && (
-        <div className="cursor-section-container slide-up" style={{ marginTop: '30px' }}>
-          <div className="section-title-bar">
-            <h3 className="section-title">🖱️ Cursor Magic</h3>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-            {CURSOR_EFFECTS.map(ce => (
-              <div
-                key={ce.id}
-                className={`cursor-card ${formData.cursorEffect === ce.id ? 'selected' : ''}`}
-                onClick={() => updateFormData({ cursorEffect: ce.id })}
-              >
-                <div className="cursor-card-icon">{ce.id === 'default' ? '🖱️' : '🌀'}</div>
-                <div className="cursor-card-info">
-                  <div className="cursor-card-name">{ce.name}</div>
-                  <div className="cursor-card-desc">{ce.desc}</div>
-                </div>
               </div>
             ))}
           </div>
