@@ -113,7 +113,7 @@ function PreviewStep({ html, isGenerating, onRegenerate }) {
           key={iframeKey}
           title="Portfolio Preview"
           srcDoc={html}
-          sandbox="allow-scripts"
+          sandbox="allow-scripts allow-same-origin"
           style={{
             width: getIframeWidth(), height: '70vh', border: 'none', background: '#0a0a1a',
             borderRadius: viewMode !== 'desktop' ? '12px' : '0',
@@ -450,9 +450,9 @@ const NO_ANIMATION_BACKGROUNDS = [
 
 function AnimationModeStep({ formData, updateFormData }) {
   const modes = [
-    { value: 'ambient', icon: '🌊', label: 'Ambient', desc: 'Calm, breathing, cinematic — auto-animated, no interaction needed', color: '#8B5CF6' },
-    { value: 'physics', icon: '⚡', label: 'Physics', desc: 'Interactive, reactive, alive — fully reacts to mouse & touch', color: '#F97316' },
-    { value: 'no-animation', icon: '⬜', label: 'No Animation', desc: 'Clean, fast, minimal — completely still, maximum performance', color: '#737373' },
+    { value: 'ambient', icon: '✨', label: 'Cinematic Ambient', desc: 'Slow, graceful movements. Perfect for a professional feel.', color: '#8B5CF6', tag: 'Polished' },
+    { value: 'physics', icon: '🪄', label: 'Interactive Physics', desc: 'Physics-based reactions. Reacts to every mouse move.', color: '#F97316', tag: 'Premium' },
+    { value: 'no-animation', icon: '⬛', label: 'Static & Fast', desc: 'No movement. Maximum speed and accessibility.', color: '#737373', tag: 'Fast' },
   ];
 
   const currentMode = formData.animationMode || 'ambient';
@@ -468,42 +468,58 @@ function AnimationModeStep({ formData, updateFormData }) {
   };
 
   return (
-    <>
-      {/* Mode Selector */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+    <div className="animation-mode-step">
+      {/* Primary Mode Selection */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '30px' }}>
         {modes.map((opt) => (
           <div
             key={opt.value}
-            className={`option-card ${currentMode === opt.value ? 'selected' : ''}`}
-            style={{ position: 'relative', cursor: 'pointer', borderColor: currentMode === opt.value ? opt.color : undefined, boxShadow: currentMode === opt.value ? `0 0 20px ${opt.color}33` : undefined }}
+            className={`animation-main-card ${currentMode === opt.value ? 'selected' : ''}`}
             onClick={() => handleModeSelect(opt.value)}
+            style={{ 
+              borderColor: currentMode === opt.value ? opt.color : 'rgba(255,255,255,0.05)',
+              background: currentMode === opt.value ? `${opt.color}15` : 'rgba(255,255,255,0.02)',
+              boxShadow: currentMode === opt.value ? `0 0 25px ${opt.color}25` : 'none',
+              '--card-accent': opt.color
+            }}
           >
-            <div className="option-card-icon" style={{ fontSize: '2rem' }}>{opt.icon}</div>
-            <div className="option-card-label">{opt.label}</div>
-            <div className="option-card-desc" style={{ fontSize: '0.7rem' }}>{opt.desc}</div>
+            <div className="card-tag">{opt.tag}</div>
+            <div className="card-icon">{opt.icon}</div>
+            <div className="card-label">{opt.label}</div>
+            <div className="card-desc">{opt.desc}</div>
           </div>
         ))}
       </div>
 
-      {/* Background Variant Selector */}
+      {/* Style / Background Variant Selector */}
       {backgrounds.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <h3 className="form-label" style={{ marginBottom: 12, fontSize: '0.95rem' }}>
-            {currentMode === 'ambient' ? '🎨 Background Style' : currentMode === 'physics' ? '🎮 Interactive Background' : '🖼️ Static Background Pattern'}
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+        <div className="variant-section-container slide-up">
+          <div className="section-title-bar">
+            <h3 className="section-title">
+              {currentMode === 'ambient' ? '🎨 Cinematic Styles' : currentMode === 'physics' ? '🎮 Physics Playgrounds' : '🖼️ Pattern Library'}
+            </h3>
+            <span className="section-subtitle">Click to select your preferred aesthetic</span>
+          </div>
+
+          <div className="variant-grid">
             {backgrounds.map(bg => (
               <div
                 key={bg.id}
-                className={`option-card ${formData.backgroundVariant === bg.id ? 'selected' : ''}`}
+                className={`variant-card ${formData.backgroundVariant === bg.id ? 'selected' : ''}`}
                 onClick={() => updateFormData({ backgroundVariant: bg.id })}
-                style={{ padding: '14px', textAlign: 'left', cursor: 'pointer', position: 'relative' }}
               >
-                {bg.flagship && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: '0.55rem', padding: '1px 5px', background: 'rgba(249, 115, 22, 0.2)', color: '#f97316', borderRadius: '3px', border: '1px solid rgba(249,115,22,0.3)', fontWeight: 700 }}>⭐ FLAGSHIP</span>}
-                {bg.badge && !bg.flagship && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: '0.5rem', padding: '1px 4px', background: bg.badge.includes('GPU') ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)', color: bg.badge.includes('GPU') ? '#ef4444' : '#22c55e', borderRadius: '3px', border: `1px solid ${bg.badge.includes('GPU') ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)'}` }}>{bg.badge}</span>}
-                <div style={{ fontSize: '1.5rem', marginBottom: 6 }}>{bg.icon}</div>
-                <div style={{ fontWeight: 600, fontSize: '0.78rem', color: 'var(--text-primary)', marginBottom: 3 }}>{bg.name}</div>
-                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', lineHeight: 1.3 }}>{bg.desc}</div>
+                {bg.flagship && <div className="flagship-badge">FLAGSHIP</div>}
+                <div className="variant-icon">{bg.icon}</div>
+                <div className="variant-content">
+                  <div className="variant-name">{bg.name}</div>
+                  <div className="variant-desc">{bg.desc}</div>
+                </div>
+                {bg.badge && (
+                  <span className={`perf-badge ${bg.badge.includes('GPU') ? 'high' : 'low'}`}>
+                    {bg.badge.includes('GPU') ? 'GPU Core' : 'Lightweight'}
+                  </span>
+                )}
+                {formData.backgroundVariant === bg.id && <div className="selected-glow" />}
               </div>
             ))}
           </div>
@@ -512,48 +528,112 @@ function AnimationModeStep({ formData, updateFormData }) {
 
       {/* Cursor Effect Selector - Physics Only */}
       {currentMode === 'physics' && (
-        <div style={{ marginTop: '20px' }}>
-          <h3 className="form-label" style={{ marginBottom: 10, fontSize: '0.95rem' }}>🖱️ Cursor Effect</h3>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div className="cursor-section-container slide-up" style={{ marginTop: '30px' }}>
+          <div className="section-title-bar">
+            <h3 className="section-title">🖱️ Cursor Magic</h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
             {CURSOR_EFFECTS.map(ce => (
               <div
                 key={ce.id}
-                className={`option-card ${formData.cursorEffect === ce.id ? 'selected' : ''}`}
+                className={`cursor-card ${formData.cursorEffect === ce.id ? 'selected' : ''}`}
                 onClick={() => updateFormData({ cursorEffect: ce.id })}
-                style={{ padding: '10px 14px', cursor: 'pointer', flex: '1 1 auto', minWidth: '100px' }}
               >
-                <div style={{ fontWeight: 600, fontSize: '0.78rem' }}>{ce.name}</div>
-                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>{ce.desc}</div>
+                <div className="cursor-card-icon">{ce.id === 'default' ? '🖱️' : '🌀'}</div>
+                <div className="cursor-card-info">
+                  <div className="cursor-card-name">{ce.name}</div>
+                  <div className="cursor-card-desc">{ce.desc}</div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Ambient Sound Toggle */}
-      <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>🎵 Ambient Sound</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>Gentle background music while browsing</div>
+      {/* Ambient Sound / Audio Experience */}
+      <div className="audio-control-card">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="audio-icon-pulse">{formData.soundEnabled ? '🎵' : '🔇'}</div>
+          <div>
+            <div className="audio-title">Atmospheric Presence</div>
+            <div className="audio-desc">Enable subtle ambient sounds for an immersive browsing experience.</div>
+          </div>
         </div>
-        <button 
+        <div 
+          className={`toggle-switch ${formData.soundEnabled ? 'on' : 'off'}`}
           onClick={() => updateFormData({ soundEnabled: !formData.soundEnabled })}
-          style={{ padding: '6px 14px', borderRadius: '20px', border: '1px solid var(--border-subtle)', background: formData.soundEnabled ? 'var(--accent-primary)' : 'transparent', color: formData.soundEnabled ? '#fff' : 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s ease', fontWeight: 600, fontSize: '0.8rem' }}
         >
-          {formData.soundEnabled ? 'ON' : 'OFF'}
-        </button>
-      </div>
-
-      {/* No Animation Info */}
-      {currentMode === 'no-animation' && (
-        <div style={{ marginTop: '20px', padding: '20px', borderRadius: 'var(--radius-md)', background: 'rgba(115,115,115,0.08)', border: '1px solid rgba(115,115,115,0.15)' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6, fontSize: '0.9rem' }}>⚡ Maximum Performance</p>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: 1.5 }}>
-            You have selected no animation. Clean, professional, and extremely fast loading. Pick a static background style above to give it a little flavor without performance cost.
-          </p>
+          <div className="toggle-thumb" />
+          <span className="toggle-label">{formData.soundEnabled ? 'Enabled' : 'Disabled'}</span>
         </div>
-      )}
-    </>
+      </div>
+      
+      <style>{`
+        .animation-mode-step { padding: 4px; }
+        .animation-main-card { 
+          position: relative; border: 1px solid; border-radius: 16px; padding: 24px; 
+          cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+        }
+        .animation-main-card:hover { transform: translateY(-4px); border-color: var(--card-accent); }
+        .animation-main-card.selected { border-width: 2px; transform: scale(1.02); }
+        .card-tag { position: absolute; top: 12px; right: 12px; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: rgba(0,0,0,0.3); color: var(--card-accent); text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .card-label { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; }
+        .card-desc { font-size: 0.75rem; color: rgba(255,255,255,0.6); line-height: 1.5; text-align: left; }
+        
+        .section-title-bar { margin-bottom: 16px; border-left: 3px solid var(--accent-primary); padding-left: 12px; }
+        .section-title { font-size: 1rem; color: #fff; margin: 0 0 4px; }
+        .section-subtitle { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+        
+        .variant-grid { display: grid; gridTemplateColumns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .variant-card { 
+          position: relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); 
+          border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.25s; overflow: hidden;
+          display: flex; align-items: center; gap: 14px;
+        }
+        .variant-card:hover { background: rgba(255,255,255,0.06); transform: translateX(4px); border-color: rgba(255,255,255,0.2); }
+        .variant-card.selected { background: rgba(124,58,237,0.1); border-color: #7c3aed; }
+        .variant-icon { font-size: 1.8rem; }
+        .variant-name { font-weight: 600; font-size: 0.85rem; color: #fff; margin-bottom: 4px; }
+        .variant-desc { font-size: 0.7rem; color: rgba(255,255,255,0.5); line-height: 1.3; }
+        
+        .flagship-badge { position: absolute; top: 0; right: 0; font-size: 0.5rem; font-weight: 800; background: #f97316; color: #fff; padding: 2px 6px; border-bottom-left-radius: 6px; }
+        .perf-badge { position: absolute; bottom: 8px; right: 8px; font-size: 0.55rem; padding: 2px 5px; border-radius: 4px; border: 1px solid; opacity: 0.7; }
+        .perf-badge.high { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.05); }
+        .perf-badge.low { color: #4ade80; border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.05); }
+        
+        .cursor-card { 
+          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); 
+          border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap:12px;
+        }
+        .cursor-card.selected { border-color: #06b6d4; background: rgba(6,182,212,0.1); }
+        .cursor-card-icon { font-size: 1.2rem; }
+        .cursor-card-name { font-weight: 600; font-size: 0.8rem; margin-bottom: 2px; }
+        .cursor-card-desc { font-size: 0.65rem; color: rgba(255,255,255,0.5); }
+        
+        .audio-control-card { 
+          margin-top: 40px; background: linear-gradient(90deg, rgba(124,58,237,0.08), rgba(6,182,212,0.08));
+          border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px;
+          display: flex; justify-content: space-between; align-items: center;
+        }
+        .audio-title { font-weight: 700; font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
+        .audio-desc { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+        .audio-icon-pulse { font-size: 1.5rem; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.6; transform: scale(1); } }
+        
+        .toggle-switch { width: 100px; height: 36px; border-radius: 20px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); position: relative; cursor: pointer; transition: all 0.3s; }
+        .toggle-switch.on { background: #7c3aed; }
+        .toggle-thumb { position: absolute; top: 4px; left: 4px; width: 28px; height: 28px; background: #fff; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .toggle-switch.on .toggle-thumb { transform: translateX(64px); }
+        .toggle-label { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; font-weight: 700; transition: all 0.3s; }
+        .toggle-switch.on .toggle-label { transform: translateY(-50%) translateX(-28px); color: #fff; }
+        
+        .selected-glow { position: absolute; inset: 0; box-shadow: inset 0 0 15px rgba(124,58,237,0.3); pointer-events: none; }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </div>
   );
 }
 

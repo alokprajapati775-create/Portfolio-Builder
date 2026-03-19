@@ -1,130 +1,112 @@
-import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, MeshDistortMaterial } from '@react-three/drei';
+// WelcomeScreen.jsx — CSS-only, zero WebGL footprint
+// Replaced Three.js canvas with pure CSS animations to prevent WebGL context exhaustion
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import * as THREE from 'three';
-
-function FloatingSphere({ position, color, size, speed, distort }) {
-  const ref = useRef();
-  useFrame((state) => {
-    ref.current.rotation.x = state.clock.elapsedTime * speed * 0.3;
-    ref.current.rotation.y = state.clock.elapsedTime * speed * 0.2;
-  });
-  return (
-    <Float speed={speed} rotationIntensity={0.5} floatIntensity={2}>
-      <mesh ref={ref} position={position}>
-        <icosahedronGeometry args={[size, 1]} />
-        <MeshDistortMaterial
-          color={color}
-          transparent
-          opacity={0.15}
-          distort={distort}
-          speed={2}
-          roughness={0.2}
-        />
-      </mesh>
-    </Float>
-  );
-}
-
-function FloatingTorus({ position, color, size }) {
-  const ref = useRef();
-  useFrame((state) => {
-    ref.current.rotation.x = state.clock.elapsedTime * 0.2;
-    ref.current.rotation.z = state.clock.elapsedTime * 0.15;
-  });
-  return (
-    <Float speed={1.5} rotationIntensity={0.8} floatIntensity={1.5}>
-      <mesh ref={ref} position={position}>
-        <torusGeometry args={[size, size * 0.3, 16, 32]} />
-        <meshPhongMaterial color={color} transparent opacity={0.12} wireframe />
-      </mesh>
-    </Float>
-  );
-}
-
-function Particles() {
-  const ref = useRef();
-  const count = 200;
-  const positions = new Float32Array(count * 3);
-  for (let i = 0; i < count * 3; i++) {
-    positions[i] = (Math.random() - 0.5) * 30;
-  }
-  useFrame((state) => {
-    ref.current.rotation.y = state.clock.elapsedTime * 0.02;
-    ref.current.rotation.x = state.clock.elapsedTime * 0.01;
-  });
-  return (
-    <points ref={ref}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          array={positions}
-          count={count}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial size={0.03} color="#7c3aed" transparent opacity={0.6} sizeAttenuation />
-    </points>
-  );
-}
-
-function Scene() {
-  return (
-    <>
-      <ambientLight intensity={0.4} />
-      <pointLight position={[10, 10, 10]} color="#7c3aed" intensity={0.8} />
-      <pointLight position={[-10, -10, -5]} color="#06b6d4" intensity={0.5} />
-
-      <FloatingSphere position={[-3, 2, -2]} color="#7c3aed" size={1.2} speed={1.5} distort={0.4} />
-      <FloatingSphere position={[3, -1, -3]} color="#06b6d4" size={0.9} speed={1.2} distort={0.3} />
-      <FloatingSphere position={[1, 3, -4]} color="#ec4899" size={0.7} speed={1.8} distort={0.5} />
-      <FloatingSphere position={[-2, -2, -1]} color="#7c3aed" size={0.5} speed={2} distort={0.3} />
-
-      <FloatingTorus position={[4, 1, -3]} color="#06b6d4" size={0.8} />
-      <FloatingTorus position={[-4, -1, -2]} color="#7c3aed" size={0.6} />
-
-      <Particles />
-    </>
-  );
-}
 
 export default function WelcomeScreen({ onStart, hasDraft, onResumeDraft }) {
+  const canvasRef = useRef(null);
+
+  // Lightweight canvas particle effect — uses 2D context, NOT WebGL
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Create lightweight particles
+    for (let i = 0; i < 80; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 2 + 0.5,
+        alpha: Math.random() * 0.5 + 0.1,
+      });
+    }
+
+    const ACCENT = '#7c3aed';
+    const ACCENT2 = '#06b6d4';
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw connections
+      particles.forEach((a, i) => {
+        particles.forEach((b, j) => {
+          if (i >= j) return;
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(124,58,237,${(1 - dist / 120) * 0.15})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        });
+      });
+
+      // Draw particles
+      particles.forEach((p, i) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = i % 3 === 0 ? ACCENT2 : ACCENT;
+        ctx.globalAlpha = p.alpha;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
+      animId = requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
   return (
     <div className="welcome-screen">
-      <div className="welcome-bg">
-        <Canvas 
-          camera={{ position: [0, 0, 6], fov: 60 }}
-          gl={{ 
-            antialias: true, 
-            powerPreference: 'high-performance',
-            preserveDrawingBuffer: true 
-          }}
-          onCreated={({ gl }) => {
-            const handleContextLost = (event) => {
-              event.preventDefault();
-              console.warn('WebGL context lost in WelcomeScreen');
-            };
-            const handleContextRestored = () => {
-              console.log('WebGL context restored in WelcomeScreen');
-            };
-            
-            gl.domElement.addEventListener('webglcontextlost', handleContextLost, false);
-            gl.domElement.addEventListener('webglcontextrestored', handleContextRestored, false);
-
-            // Clean up listeners when component unmounts
-            return () => {
-              gl.domElement.removeEventListener('webglcontextlost', handleContextLost);
-              gl.domElement.removeEventListener('webglcontextrestored', handleContextRestored);
-            };
-          }}
-        >
-          <Scene />
-        </Canvas>
+      {/* CSS-only background layers */}
+      <div className="welcome-bg-gradient" />
+      <div className="welcome-bg-orbs">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
       </div>
 
+      {/* Particle canvas — 2D only */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+          pointerEvents: 'none', zIndex: 1,
+        }}
+      />
+
+      {/* Content */}
       <motion.div
         className="welcome-content"
+        style={{ position: 'relative', zIndex: 2 }}
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -210,6 +192,57 @@ export default function WelcomeScreen({ onStart, hasDraft, onResumeDraft }) {
           </div>
         </motion.div>
       </motion.div>
+
+      <style>{`
+        .welcome-screen {
+          position: relative;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          background: #0a0a1a;
+        }
+        .welcome-bg-gradient {
+          position: absolute; inset: 0; z-index: 0;
+          background: 
+            radial-gradient(ellipse 80% 60% at 20% 50%, rgba(124,58,237,0.15) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 50% at 80% 20%, rgba(6,182,212,0.12) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 80% at 70% 80%, rgba(236,72,153,0.08) 0%, transparent 60%);
+        }
+        .welcome-bg-orbs { position: absolute; inset: 0; z-index: 0; }
+        .orb {
+          position: absolute; border-radius: 50%;
+          filter: blur(80px); opacity: 0.2;
+        }
+        .orb-1 {
+          width: 500px; height: 500px;
+          background: #7c3aed;
+          top: -100px; left: -100px;
+          animation: drift 20s ease-in-out infinite alternate;
+        }
+        .orb-2 {
+          width: 400px; height: 400px;
+          background: #06b6d4;
+          bottom: -100px; right: -100px;
+          animation: drift 25s ease-in-out infinite alternate-reverse;
+        }
+        .orb-3 {
+          width: 300px; height: 300px;
+          background: #ec4899;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          animation: pulse-orb 8s ease-in-out infinite alternate;
+        }
+        @keyframes drift {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(60px, 40px); }
+        }
+        @keyframes pulse-orb {
+          0% { opacity: 0.05; transform: translate(-50%, -50%) scale(1); }
+          100% { opacity: 0.15; transform: translate(-50%, -50%) scale(1.3); }
+        }
+      `}</style>
     </div>
   );
 }
