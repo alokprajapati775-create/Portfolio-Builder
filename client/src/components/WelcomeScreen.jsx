@@ -93,7 +93,32 @@ export default function WelcomeScreen({ onStart, hasDraft, onResumeDraft }) {
   return (
     <div className="welcome-screen">
       <div className="welcome-bg">
-        <Canvas camera={{ position: [0, 0, 6], fov: 60 }}>
+        <Canvas 
+          camera={{ position: [0, 0, 6], fov: 60 }}
+          gl={{ 
+            antialias: true, 
+            powerPreference: 'high-performance',
+            preserveDrawingBuffer: true 
+          }}
+          onCreated={({ gl }) => {
+            const handleContextLost = (event) => {
+              event.preventDefault();
+              console.warn('WebGL context lost in WelcomeScreen');
+            };
+            const handleContextRestored = () => {
+              console.log('WebGL context restored in WelcomeScreen');
+            };
+            
+            gl.domElement.addEventListener('webglcontextlost', handleContextLost, false);
+            gl.domElement.addEventListener('webglcontextrestored', handleContextRestored, false);
+
+            // Clean up listeners when component unmounts
+            return () => {
+              gl.domElement.removeEventListener('webglcontextlost', handleContextLost);
+              gl.domElement.removeEventListener('webglcontextrestored', handleContextRestored);
+            };
+          }}
+        >
           <Scene />
         </Canvas>
       </div>

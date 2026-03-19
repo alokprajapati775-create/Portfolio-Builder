@@ -327,8 +327,11 @@ module.exports = async function handler(req, res) {
     const builderState = req.body || {};
     const html = generatePortfolioHTML(builderState);
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(html);
+    // Return JSON containing the HTML string — Fixes "Unexpected token <" errors on frontend
+    return res.status(200).json({ 
+      success: true, 
+      html: html 
+    });
 
   } catch (error) {
     console.error('Handler error:', error.message);
