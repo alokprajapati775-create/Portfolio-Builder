@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { FiGithub, FiLinkedin, FiInstagram, FiTwitter, FiGlobe, FiPlus, FiX, FiUpload, FiMonitor, FiSmartphone, FiTablet, FiRefreshCw } from 'react-icons/fi';
 import { allThemes } from '../config/themesData';
 import { getAvatarsForCategory } from '../utils/avatarUtils';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function WizardStep({ step, stepIndex, totalSteps, formData, updateFormData, previewHTML, isGenerating, onRegenerate }) {
   return (
@@ -123,16 +124,42 @@ function PreviewStep({ html, isGenerating, onRegenerate }) {
         />
       </div>
 
-      {/* Info */}
-      <p style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.8rem', marginTop: '12px' }}>
-        ✨ This is exactly what your downloaded portfolio will look like
-      </p>
+      {/* Info and QR */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', marginTop: '20px' }}>
+        <p style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>
+          ✨ This is exactly what your downloaded portfolio will look like
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ background: '#fff', padding: '6px', borderRadius: '8px' }}>
+            <QRCodeSVG value={`https://portfoliocraft.com/@${(formData.name || 'user').replace(/\s+/g,'').toLowerCase()}`} size={48} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Your QR Code</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Scan to preview</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 /* ---- Name & Bio ---- */
 function NameStep({ formData, updateFormData }) {
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const handleAIGenerate = () => {
+    setIsGeneratingAI(true);
+    setTimeout(() => {
+      const pType = formData.portfolioType || 'Creative Professional';
+      const name = formData.name || 'this professional';
+      updateFormData({
+        bio: `${pType} passionate about building scalable solutions and digital experiences.`,
+        about: `Hello! I'm ${name}, a dedicated ${pType.toLowerCase()} with a track record of delivering high-quality work. I thrive on solving complex problems and collaborating with teams to create digital experiences that make an impact. My approach blends technical expertise with creative problem-solving to drive innovation.`
+      });
+      setIsGeneratingAI(false);
+    }, 1500);
+  };
+
   return (
     <>
       <div className="form-group">
@@ -156,12 +183,22 @@ function NameStep({ formData, updateFormData }) {
         />
       </div>
       <div className="form-group">
-        <label className="form-label">About You</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <label className="form-label" style={{ marginBottom: 0 }}>About You</label>
+          <button 
+            onClick={handleAIGenerate} 
+            disabled={isGeneratingAI}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s', filter: isGeneratingAI ? 'grayscale(1)' : 'none' }}
+          >
+            {isGeneratingAI ? '⏳ Generating...' : '🤖 Auto-write with AI'}
+          </button>
+        </div>
         <textarea
           className="form-textarea"
           placeholder="Tell the world about yourself, your passion, and what drives you..."
           value={formData.about}
           onChange={(e) => updateFormData({ about: e.target.value })}
+          rows={4}
         />
       </div>
     </>

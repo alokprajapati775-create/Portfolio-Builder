@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import WizardStep from './WizardStep';
 import { WIZARD_STEPS } from '../config/wizardSteps';
 import { generatePortfolioHTML } from '../utils/portfolioGenerator';
+import html2pdf from 'html2pdf.js';
 
 export default function BuilderView({ formData, updateFormData, saveDraft }) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -100,6 +101,58 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
     }
   };
 
+  const handleDownloadResume = async () => {
+    setIsDownloading(true);
+    try {
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #111;">
+          <h1 style="font-size: 32px; margin-bottom: 5px;">${formData.name || 'Resume'}</h1>
+          <p style="font-size: 16px; color: #555; margin-bottom: 20px;">${formData.bio || ''}</p>
+          ${formData.email ? `<p style="font-size: 14px;"><strong>Email:</strong> ${formData.email}</p>` : ''}
+          
+          <h2 style="font-size: 20px; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top: 30px;">About</h2>
+          <p style="font-size: 14px; color: #444; line-height: 1.6;">${formData.about || 'N/A'}</p>
+          
+          <h2 style="font-size: 20px; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top: 30px;">Skills</h2>
+          <p style="font-size: 14px; color: #444;">${(formData.skills && formData.skills.length > 0) ? formData.skills.join(', ') : 'None listed'}</p>
+
+          <h2 style="font-size: 20px; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top: 30px;">Projects</h2>
+          ${(formData.projects && formData.projects.length > 0) ? formData.projects.map(p => `
+            <div style="margin-bottom: 15px;">
+              <h3 style="font-size: 16px; margin-bottom: 5px;">${p.title}</h3>
+              <p style="font-size: 14px; color: #555; margin-bottom: 4px;">${p.description}</p>
+              ${p.link ? `<a href="${p.link}" style="font-size: 12px; color: #0066cc;">${p.link}</a>` : ''}
+            </div>
+          `).join('') : '<p style="font-size:14px;color:#555;">None listed</p>'}
+        </div>
+      `;
+      const opt = {
+        margin:       1,
+        filename:     `${(formData.name || 'Resume').replace(/\s+/g, '_')}_Resume.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      await html2pdf().set(opt).from(div).save();
+    } catch (err) {
+      console.error('Resume download failed:', err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const getValidationMessage = () => {
+    const type = WIZARD_STEPS[currentStep]?.type;
+    if (type === 'name' && (!formData.name || !formData.name.trim())) return '⚠️ Please enter your name to continue.';
+    if (type === 'portfolioType' && !formData.portfolioType) return '⚠️ Please select a category.';
+    if (type === 'themeSelection' && !formData.theme) return '⚠️ Please select a theme.';
+    if (type === 'projects' && (!formData.projects || formData.projects.length === 0)) return '⚠️ Please add at least one project.';
+    return null;
+  };
+  const valError = getValidationMessage();
+
+
   return (
     <div className={`builder-layout ${isPreviewStep ? 'preview-mode' : ''}`}>
       {/* Save Toast */}
@@ -167,26 +220,42 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
         </div>
 
         {/* Navigation */}
-        <div className="wizard-nav">
+        <div className="wizard-nav" style={{ flexWrap: 'wrap' }}>
           {currentStep > 0 && (
             <button className="btn btn-secondary" onClick={handlePrev}>
               ← Back
             </button>
           )}
+          {valError && !isPreviewStep && (
+            <span style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 500, margin: 'auto' }}>
+              {valError}
+            </span>
+          )}
           {isPreviewStep ? (
-            <button
-              className="btn btn-success"
-              onClick={handleDownload}
-              disabled={isDownloading || isGenerating}
-              style={{ flex: 1 }}
-            >
-              {isDownloading ? '⏳ Packaging...' : '📦 Download Portfolio (.zip)'}
-            </button>
+            <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
+              <button
+                className="btn btn-success"
+                onClick={handleDownload}
+                disabled={isDownloading || isGenerating}
+                style={{ flex: 1 }}
+              >
+                {isDownloading ? '⏳...' : '📦 Get Website (.zip)'}
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleDownloadResume}
+                disabled={isDownloading || isGenerating}
+                style={{ flex: 1, background: '#3b82f6', borderColor: '#2563eb' }}
+              >
+                {isDownloading ? '⏳...' : '📄 Get CV (.pdf)'}
+              </button>
+            </div>
           ) : (
             <button 
               className="btn btn-primary" 
               onClick={handleNext}
-              disabled={(WIZARD_STEPS[currentStep].type === 'portfolioType' && !formData.portfolioType) || (WIZARD_STEPS[currentStep].type === 'themeSelection' && !formData.theme)}
+              disabled={!!valError}
+              style={{ marginLeft: valError ? '0' : 'auto' }}
             >
               {currentStep === totalSteps - 2 ? '🎉 Preview Portfolio' : 'Continue →'}
             </button>

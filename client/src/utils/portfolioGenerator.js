@@ -254,9 +254,10 @@ export function generatePortfolioHTML(data) {
         });
 
         // Sync HTML card to physics body
+        var getScale = function() { return window.innerWidth < 400 ? 0.8 : 1; };
         M.Events.on(eng,'afterUpdate',function(){
           if(!cB||!lEl)return;
-          lEl.style.transform='translate(-50%,-50%) translate('+cB.position.x+'px,'+cB.position.y+'px) rotate('+cB.angle+'rad)';
+          lEl.style.transform='translate(-50%,-50%) translate('+cB.position.x+'px,'+cB.position.y+'px) rotate('+cB.angle+'rad) scale('+getScale()+')';
         });
 
         // MOUSE INTERACTION — grab card and balls
@@ -281,12 +282,12 @@ export function generatePortfolioHTML(data) {
           e.stopPropagation();
           if(isSideMode)return;
           isSideMode=true;
-          // Animate rope anchor to right
-          targetAnchorX=cv.width - 160;
+          // Animate rope anchor to right, throwing it offscreen
+          targetAnchorX=cv.width + 250;
           // Give the card a little push
-          M.Body.setVelocity(cB,{x:4,y:-2});
+          M.Body.setVelocity(cB,{x:8,y:-2});
           // Lower opacity so text behind is readable
-          lEl.style.opacity='0.15';
+          lEl.style.opacity='0';
           lEl.style.pointerEvents='none'; // let clicks pass through
           // Show portfolio content with animation
           setTimeout(function(){
@@ -439,6 +440,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
       <a href="#skills">Skills</a>
       <a href="#projects">Projects</a>
       <a href="#contact">Contact</a>
+      <button id="dlToggle" aria-label="Toggle Dark/Light Mode">🌓</button>
     </div>
   </nav>`;
 
@@ -448,8 +450,17 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
     border-bottom:1px solid rgba(255,255,255,.06);transition:all .3s}
   .pf-nav.scrolled{box-shadow:0 4px 30px rgba(0,0,0,.3)}
   .pf-nav-brand{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:800;color:${theme.text}}
-  .pf-nav-links{display:flex;gap:28px}.pf-nav-links a{color:${theme.textSecondary};text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s}
-  .pf-nav-links a:hover{color:${a}}`;
+  .pf-nav-links{display:flex;gap:28px;align-items:center}.pf-nav-links a{color:${theme.textSecondary};text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s}
+  .pf-nav-links a:hover{color:${a}}
+  #dlToggle{background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text);padding:5px;transition:transform .2s}
+  #dlToggle:hover{transform:scale(1.1)}`;
+
+        const isLightMode = theme.bg === '#ffffff' || !!theme.bg.toLowerCase().startsWith('#f');
+        const altBg = isLightMode ? '#0a0a1a' : '#ffffff';
+        const altBg2 = isLightMode ? '#111122' : '#f4f4f4';
+        const altText = isLightMode ? '#f0f0f5' : '#111111';
+        const altText2 = isLightMode ? '#9ca3af' : '#444444';
+        const altCard = isLightMode ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.03)';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -460,12 +471,14 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" crossorigin/>
   <style>
     :root{--bg:${theme.bg};--bg2:${theme.bgSecondary};--accent:${a};--accent2:${a2};--text:${theme.text};--text2:${theme.textSecondary};--card:${theme.card};--grad:${theme.gradient};--radius:16px;}
+    html[data-theme='alt'] { --bg: ${altBg}; --bg2: ${altBg2}; --text: ${altText}; --text2: ${altText2}; --card: ${altCard}; }
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     html{scroll-behavior:smooth}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background 0.4s ease, color 0.4s ease;}
     .content{position:relative;z-index:5}
     .section{padding:110px 8% 80px;max-width:1300px;margin:0 auto}
     .section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.5rem,5vw,3.8rem);font-weight:800;margin-bottom:50px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .pf-nav { background: var(--bg) !important; color: var(--text) !important; }
 
     /* Hero */
     .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding-top:100px}
@@ -516,6 +529,11 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
     ${socials?`<section class="section" id="contact"><h2 class="section-title reveal">Let's Connect</h2><div class="soc-row">${socials}</div></section>`:''}
   </div>
   <script>
+    var dl=document.getElementById('dlToggle');
+    if(dl) dl.onclick=function(){
+      var isAlt=document.documentElement.getAttribute('data-theme')==='alt';
+      document.documentElement.setAttribute('data-theme', isAlt?'':'alt');
+    };
     // Navbar scroll effect
     window.addEventListener('scroll',function(){var n=document.getElementById('pfNav');if(n)n.classList.toggle('scrolled',window.scrollY>40);});
     ${bgJS}
