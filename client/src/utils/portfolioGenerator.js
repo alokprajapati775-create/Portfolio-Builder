@@ -276,15 +276,18 @@ export function generatePortfolioHTML(data) {
         mouse.element.removeEventListener('mousewheel',mouse.mousewheel);
         mouse.element.removeEventListener('DOMMouseScroll',mouse.mousewheel);
 
-        // VIEW PORTFOLIO — slide card to left side
+        // VIEW PORTFOLIO — slide card to right side + lower visibility
         if(viewBtn) viewBtn.onclick=function(e){
           e.stopPropagation();
           if(isSideMode)return;
           isSideMode=true;
-          // Animate rope anchor to left
-          targetAnchorX=160;
+          // Animate rope anchor to right
+          targetAnchorX=cv.width - 160;
           // Give the card a little push
-          M.Body.setVelocity(cB,{x:-4,y:-2});
+          M.Body.setVelocity(cB,{x:4,y:-2});
+          // Lower opacity so text behind is readable
+          lEl.style.opacity='0.15';
+          lEl.style.pointerEvents='none'; // let clicks pass through
           // Show portfolio content with animation
           setTimeout(function(){
             if(contentEl){contentEl.classList.remove('hidden-content');contentEl.classList.add('visible-content');}
@@ -292,14 +295,16 @@ export function generatePortfolioHTML(data) {
           // Show back button
           if(backBtn){backBtn.style.display='block';}
           // Change button text
-          viewBtn.textContent='Portfolio →';
+          viewBtn.textContent='Portfolio ←';
         };
 
         // BACK — slide card back to center
         if(backBtn) backBtn.onclick=function(){
           isSideMode=false;
           targetAnchorX=cv.width/2;
-          M.Body.setVelocity(cB,{x:3,y:-2});
+          M.Body.setVelocity(cB,{x:-3,y:-2});
+          lEl.style.opacity='1';
+          lEl.style.pointerEvents='auto';
           // Hide portfolio content
           if(contentEl){contentEl.classList.remove('visible-content');contentEl.classList.add('hidden-content');}
           backBtn.style.display='none';
