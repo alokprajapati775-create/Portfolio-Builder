@@ -131,10 +131,18 @@ function PreviewStep({ html, isGenerating, onRegenerate, formData }) {
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ background: '#fff', padding: '6px', borderRadius: '8px' }}>
-            <QRCodeSVG id="portfolio-qr" value={`https://portfoliocraft.com/@${(formData.name || 'user').replace(/\s+/g,'').toLowerCase()}`} size={56} />
+            <QRCodeSVG id="portfolio-qr" value={formData.deployedUrl || 'https://your-live-website.com'} size={56} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Your QR Code</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Export QR Code</div>
+            <input 
+              type="text" 
+              placeholder="Enter your live URL..." 
+              value={formData.deployedUrl || ''}
+              onChange={(e) => updateFormData({ deployedUrl: e.target.value })}
+              style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.2)', color: '#fff', width: '150px', outline: 'none' }}
+              title="Enter where you will host your portfolio"
+            />
             <button
                onClick={(e) => {
                  e.preventDefault();
