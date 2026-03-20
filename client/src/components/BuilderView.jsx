@@ -12,6 +12,7 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [sharedUrl, setSharedUrl] = useState('');
   const [showSaveToast, setShowSaveToast] = useState(false);
 
   const totalSteps = WIZARD_STEPS.length;
@@ -120,12 +121,27 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
       const data = await res.json();
       
       if (data.url) {
-        await navigator.clipboard.writeText(data.url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
-        
-        // Also update the QR code URL automatically
+        setSharedUrl(data.url);
         updateFormData({ deployedUrl: data.url });
+
+        // Try modern clipboard API
+        try {
+          await navigator.clipboard.writeText(data.url);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 3000);
+        } catch (copyErr) {
+          // Fallback to legacy execCommand for non-HTTPS or incompatible browsers
+          const textArea = document.createElement("textarea");
+          textArea.value = data.url;
+          document.body.appendChild(textArea);
+          textArea.select();
+          try {
+            document.execCommand('copy');
+            setCopied(true);
+            setTimeout(() => setCopied(false), 3000);
+          } catch (e) { console.error('Fallback copy failed', e); }
+          document.body.removeChild(textArea);
+        }
       }
     } catch (err) {
       console.error('Sharing failed:', err);
@@ -293,6 +309,31 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
             >
               {currentStep === totalSteps - 2 ? '🎉 Preview Portfolio' : 'Continue →'}
             </button>
+          )}
+          
+          {sharedUrl && isPreviewStep && (
+            <div style={{ 
+              width: '100%', marginTop: '16px', padding: '12px', background: 'rgba(5,150,105,0.1)', 
+              border: '1px solid rgba(5,150,105,0.3)', borderRadius: '8px', display: 'flex', 
+              alignItems: 'center', gap: '10px', animation: 'fadeIn 0.3s' 
+            }}>
+              <input 
+                readOnly 
+                value={sharedUrl} 
+                onClick={(e) => e.target.select()}
+                style={{ flex: 1, background: 'none', border: 'none', color: '#10b981', fontSize: '0.85rem', fontWeight: 500 }} 
+              />
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(sharedUrl);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                style={{ background: '#10b981', border: 'none', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
           )}
         </div>
       </div>
