@@ -88,7 +88,8 @@ const THEME_PALETTES = {
 // Generate portfolio HTML
 function generatePortfolioHTML(data) {
   const defaultTheme = THEME_PALETTES.dark;
-  let theme = { ...(data.themePalette || THEME_PALETTES[data.theme] || defaultTheme) };
+  const baseTheme = THEME_PALETTES[data.theme] || defaultTheme;
+  let theme = { ...baseTheme, ...(data.themePalette || {}) };
   
   // Apply custom primary color override
   if (data.customPrimaryColor) {

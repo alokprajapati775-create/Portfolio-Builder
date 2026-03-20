@@ -83,6 +83,10 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error: ${res.status}`);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -96,6 +100,7 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
       if (saveDraft) saveDraft(formData);
     } catch (err) {
       console.error('Download failed:', err);
+      alert('Failed to generate your portfolio. ' + err.message);
     } finally {
       setIsDownloading(false);
     }
