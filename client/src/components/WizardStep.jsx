@@ -771,13 +771,7 @@ function ProfileImageStep({ formData, updateFormData }) {
   const removeImage = () => {
     updateFormData({ profileImage: null, profileImageUrl: '' });
     setSelectedAvatar(null);
-    setShowCustomizer(false);
-    setPreviewUrl(null);
-    setCustomization(DEFAULT_CUSTOMIZATION);
   };
-
-  const isDiceBearUrl = (url) => url && url.startsWith(DICEBEAR_BASE);
-  const isUploadedUrl  = (url) => url && url.startsWith('/api/uploads/');
 
   return (
     <>
@@ -800,7 +794,7 @@ function ProfileImageStep({ formData, updateFormData }) {
       {/* Upload tab */}
       {activeTab === 'upload' && (
         <>
-          {!formData.profileImageUrl || isDiceBearUrl(formData.profileImageUrl) ? (
+          {!formData.profileImageUrl || formData.profileImageUrl.startsWith('/avatars/') ? (
             <div {...getRootProps()} className={`dropzone ${isDragActive ? 'active' : ''}`}>
               <input {...getInputProps()} />
               <div className="dropzone-icon"><FiUpload /></div>
