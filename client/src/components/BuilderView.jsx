@@ -10,9 +10,6 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
   const [previewHTML, setPreviewHTML] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [sharedUrl, setSharedUrl] = useState('');
   const [showSaveToast, setShowSaveToast] = useState(false);
 
   const totalSteps = WIZARD_STEPS.length;
@@ -109,57 +106,38 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
     }
   };
 
-  const handleShareLink = async () => {
-    setIsSharing(true);
+  const handleDownloadHTML = async () => {
+    setIsDownloading(true);
     try {
-      // Try server-side first (gives a real shareable URL)
-      try {
-        const res = await fetch('/api/share', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.url) {
-            setSharedUrl(data.url);
-            updateFormData({ deployedUrl: data.url });
-            try { await navigator.clipboard.writeText(data.url); } catch(e) {}
-            setCopied(true);
-            setTimeout(() => setCopied(false), 3000);
-            return;
-          }
+      let finalData = { ...formData };
+      if (finalData.profileImageUrl && !finalData.profileImageUrl.startsWith('data:')) {
+        try {
+          const res = await fetch(finalData.profileImageUrl);
+          const blob = await res.blob();
+          const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+          finalData.profileImageUrl = base64;
+        } catch (e) {
+          console.error('Failed to convert avatar to base64', e);
         }
-      } catch (serverErr) {
-        console.warn('Server share unavailable, using client-side fallback');
       }
-
-      // Fallback: generate locally and open in new tab
-      const html = generatePortfolioHTML(formData);
-      const blob = new Blob([html], { type: 'text/html' });
-      const blobUrl = URL.createObjectURL(blob);
-      setSharedUrl(blobUrl);
-      window.open(blobUrl, '_blank');
-      setCopied(false);
-    } catch (err) {
-      console.error('Share failed:', err);
-      alert('Failed to generate portfolio link: ' + err.message);
+      
+      const html = generatePortfolioHTML(finalData);
+      const fileBlob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(fileBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(formData.name || 'portfolio').replace(/\s+/g, '_')}_portfolio.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } finally {
-      setIsSharing(false);
+      setIsDownloading(false);
     }
-  };
-
-  const handleDownloadHTML = () => {
-    const html = generatePortfolioHTML(formData);
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${(formData.name || 'portfolio').replace(/\s+/g, '_')}_portfolio.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   const handleDownloadResume = async () => {
@@ -295,19 +273,12 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
           {isPreviewStep ? (
             <div style={{ display: 'flex', gap: '10px', flex: 1, flexWrap: 'wrap' }}>
               <button
-                className="btn btn-success"
-                onClick={handleShareLink}
-                disabled={isSharing || isGenerating}
-                style={{ flex: 1.5, background: copied ? '#059669' : 'var(--btn-success-bg)', position: 'relative', minWidth: '140px' }}
-              >
-                {isSharing ? '⚙️ Generating...' : copied ? '✅ Link Copied!' : '🔗 Get Shareable Link'}
-              </button>
-              <button
                 className="btn btn-primary"
                 onClick={handleDownloadHTML}
+                disabled={isDownloading || isGenerating}
                 style={{ flex: 1, minWidth: '120px' }}
               >
-                📥 Download HTML
+                {isDownloading ? '⏳...' : '📥 Download Portfolio'}
               </button>
               <button
                 className="btn btn-primary"
@@ -327,64 +298,6 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
             >
               {currentStep === totalSteps - 2 ? '🎉 Preview Portfolio' : 'Continue →'}
             </button>
-          )}
-          
-          {sharedUrl && isPreviewStep && (
-            <div style={{ 
-              width: '100%', marginTop: '16px', padding: '14px', background: 'rgba(5,150,105,0.12)', 
-              border: '1px solid rgba(16,185,129,0.4)', borderRadius: '10px',
-            }}>
-              <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600, marginBottom: '8px' }}>
-                {sharedUrl.startsWith('blob:') ? '🎉 Portfolio opened in new tab!' : '🎉 Your portfolio link is ready!'}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input 
-                  readOnly 
-                  value={sharedUrl.startsWith('blob:') ? 'Portfolio opened in a new browser tab →' : sharedUrl} 
-                  onClick={(e) => e.target.select()}
-                  style={{ 
-                    flex: 1, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.3)', 
-                    color: '#fff', fontSize: '0.82rem', fontWeight: 500, padding: '8px 12px', 
-                    borderRadius: '6px', outline: 'none' 
-                  }} 
-                />
-                <button 
-                  onClick={() => window.open(sharedUrl, '_blank')}
-                  style={{ 
-                    background: '#10b981', border: 'none', color: '#fff', padding: '8px 14px', 
-                    borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600,
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  Open
-                </button>
-                {!sharedUrl.startsWith('blob:') && (
-                  <button 
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(sharedUrl);
-                      } catch(e) {
-                        const ta = document.createElement('textarea');
-                        ta.value = sharedUrl;
-                        document.body.appendChild(ta);
-                        ta.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(ta);
-                      }
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                    style={{ 
-                      background: copied ? '#059669' : 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', 
-                      color: '#10b981', padding: '8px 14px', borderRadius: '6px', fontSize: '0.8rem', 
-                      cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {copied ? '✓ Copied' : 'Copy'}
-                  </button>
-                )}
-              </div>
-            </div>
           )}
         </div>
       </div>
