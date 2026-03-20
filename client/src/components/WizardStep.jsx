@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiGithub, FiLinkedin, FiInstagram, FiTwitter, FiGlobe, FiPlus, FiX, FiUpload, FiMonitor, FiSmartphone, FiTablet, FiRefreshCw } from 'react-icons/fi';
 import { allThemes } from '../config/themesData';
-import { getAvatarsForCategory } from '../utils/avatarUtils';
+import { BASE_AVATARS } from '../utils/avatarUtils';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function WizardStep({ step, stepIndex, totalSteps, formData, updateFormData, previewHTML, isGenerating, onRegenerate }) {
@@ -650,48 +650,60 @@ function AnimationModeStep({ formData, updateFormData }) {
 }
 
 /* ---- Avatar Card with shimmer + error fallback ---- */
-function AvatarCard({ avatar, isSelected, onSelect }) {
+function AvatarCard({ avatar, isSelected, onSelect, accentColor }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
   return (
     <div
       className={`avatar-card${isSelected ? ' selected' : ''}`}
-      onClick={() => onSelect(avatar.url)}
-      title={avatar.id}
+      onClick={() => onSelect(avatar)}
+      title={avatar.name}
+      style={{
+        border: isSelected
+          ? `2px solid ${accentColor}`
+          : '2px solid transparent',
+        boxShadow: isSelected
+          ? `0 0 16px ${accentColor}55`
+          : 'none'
+      }}
     >
       {/* Shimmer skeleton while loading */}
       {!loaded && !error && <div className="avatar-shimmer" />}
 
-      {/* DiceBear SVG avatar */}
+      {/* Static anime avatar */}
       {!error && (
         <img
-          src={avatar.url}
-          alt="avatar"
+          src={avatar.src}
+          alt={avatar.name}
           onLoad={() => setLoaded(true)}
           onError={() => setError(true)}
           style={{
             display: loaded ? 'block' : 'none',
-            width: '100%',
-            height: '100%',
+            width: 72,
+            height: 72,
             objectFit: 'cover',
-            borderRadius: '14px',
+            borderRadius: '50%',
           }}
         />
       )}
 
-      {/* Fallback if API fails */}
+      {/* Fallback if image fails */}
       {error && (
         <div className="avatar-error-fallback">
-          <span className="avatar-initials">{avatar.role ? avatar.role[0].toUpperCase() : '?'}</span>
+          <span className="avatar-initials">{avatar.name ? avatar.name[0].toUpperCase() : '?'}</span>
           <span className="avatar-error-text">Retry later</span>
         </div>
       )}
 
       {/* Selected checkmark */}
       {isSelected && (
-        <div className="avatar-selected-overlay">✓</div>
+        <div className="selected-badge" style={{ background: accentColor }}>
+          ✓
+        </div>
       )}
+
+      <span className="avatar-name">{avatar.name}</span>
     </div>
   );
 }
@@ -700,21 +712,24 @@ function AvatarCard({ avatar, isSelected, onSelect }) {
 function ProfileImageStep({ formData, updateFormData }) {
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('upload');
-  const [avatarGender, setAvatarGender] = useState('male');
-  const [avatarRole, setAvatarRole] = useState(formData.portfolioType || 'developer');
-  const [avatars, setAvatars] = useState([]);
 
-  const DICEBEAR_BASE = 'https://api.dicebear.com';
-  const roles = ['developer', 'designer', 'student', 'business', 'creative'];
-  const genders = ['male', 'female'];
+  // ── Avatar Customization State ──
+  const [gender, setGender] = useState('male');
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
 
-  // Regenerate avatar list whenever gender or role changes
-  useEffect(() => {
-    const list = getAvatarsForCategory(avatarGender, avatarRole, 3);
-    setAvatars(list);
-    // Preload into browser cache
-    list.forEach(a => { const img = new Image(); img.src = a.url; });
-  }, [avatarGender, avatarRole]);
+  const accentColor = formData.themePalette?.accent || '#7C3AED';
+
+  // When user selects an avatar from the grid
+  function handleAvatarSelect(avatar) {
+    setSelectedAvatar(avatar);
+    updateFormData({ profileImage: null, profileImageUrl: avatar.src });
+  }
+
+  // Switch gender — reset selection
+  function handleGenderSwitch(newGender) {
+    setGender(newGender);
+    setSelectedAvatar(null);
+  }
 
   const onDrop = useCallback(async (acceptedFiles) => {
     if (acceptedFiles.length === 0) return;
@@ -742,10 +757,12 @@ function ProfileImageStep({ formData, updateFormData }) {
     maxSize: 10 * 1024 * 1024,
   });
 
-  const removeImage = () => updateFormData({ profileImage: null, profileImageUrl: '' });
-
-  const handleSelectAvatar = (url) => {
-    updateFormData({ profileImage: null, profileImageUrl: url });
+  const removeImage = () => {
+    updateFormData({ profileImage: null, profileImageUrl: '' });
+    setSelectedAvatar(null);
+    setShowCustomizer(false);
+    setPreviewUrl(null);
+    setCustomization(DEFAULT_CUSTOMIZATION);
   };
 
   const isDiceBearUrl = (url) => url && url.startsWith(DICEBEAR_BASE);
@@ -805,50 +822,38 @@ function ProfileImageStep({ formData, updateFormData }) {
 
       {/* Avatar tab */}
       {activeTab === 'avatars' && (
-        <div style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
-          <p style={{ marginBottom: '10px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            3D cartoon avatars — powered by DiceBear (free, Vercel-safe)
-          </p>
+        <div className="avatar-selector">
 
-          {/* Gender pills */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-            {genders.map(g => (
-              <button
-                key={g}
-                onClick={() => setAvatarGender(g)}
-                style={{ padding: '5px 14px', borderRadius: '20px', border: '1px solid var(--border-subtle)', background: avatarGender === g ? 'rgba(255,255,255,0.1)' : 'transparent', color: avatarGender === g ? 'var(--text-primary)' : 'var(--text-secondary)', fontSize: '0.78rem', cursor: 'pointer', fontWeight: avatarGender === g ? 700 : 400 }}
-              >
-                {g === 'male' ? '👨 Male' : '👩 Female'}
-              </button>
-            ))}
+          {/* ── Gender Toggle ── */}
+          <div className="gender-toggle">
+            <button
+              className={`gender-btn ${gender === 'male' ? 'active' : ''}`}
+              onClick={() => handleGenderSwitch('male')}
+            >
+              👨 Male
+            </button>
+            <button
+              className={`gender-btn ${gender === 'female' ? 'active' : ''}`}
+              onClick={() => handleGenderSwitch('female')}
+            >
+              👩 Female
+            </button>
           </div>
 
-          {/* Role pills */}
-          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
-            {roles.map(r => (
-              <button
-                key={r}
-                onClick={() => setAvatarRole(r)}
-                style={{ padding: '3px 10px', borderRadius: '4px', border: 'none', background: avatarRole === r ? 'rgba(124,58,237,0.18)' : 'transparent', color: avatarRole === r ? 'var(--text-accent)' : 'var(--text-tertiary)', fontSize: '0.72rem', cursor: 'pointer', textTransform: 'capitalize', fontWeight: 500 }}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-
-          {/* Avatar grid */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            {avatars.map(avatar => (
+          {/* ── Avatar Grid — 5 per gender ── */}
+          <div className="avatar-grid">
+            {BASE_AVATARS[gender].map((avatar) => (
               <AvatarCard
                 key={avatar.id}
                 avatar={avatar}
-                isSelected={formData.profileImageUrl === avatar.url}
-                onSelect={handleSelectAvatar}
+                isSelected={selectedAvatar?.id === avatar.id}
+                onSelect={handleAvatarSelect}
+                accentColor={accentColor}
               />
             ))}
           </div>
 
-          {isDiceBearUrl(formData.profileImageUrl) && (
+          {formData.profileImageUrl?.startsWith('/avatars/') && (
             <button
               className="remove-upload"
               style={{ marginTop: '14px', width: '100%' }}
