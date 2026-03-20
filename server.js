@@ -54,7 +54,7 @@ const upload = multer({
 
 // Serve uploaded files and hosted portfolios
 app.use('/api/uploads', express.static(uploadsDir));
-app.use('/api/share', express.static(portfoliosDir));
+app.use('/api/portfolios', express.static(portfoliosDir));
 
 // Upload profile image
 app.post('/api/upload', upload.single('image'), (req, res) => {
@@ -765,7 +765,7 @@ app.post('/api/share', (req, res) => {
     
     const host = req.get('host');
     const protocol = req.protocol;
-    const url = `${protocol}://${host}/api/share/${filename}`;
+    const url = `${protocol}://${host}/api/portfolios/${filename}`;
     
     res.json({ success: true, url, id });
   } catch (err) {
