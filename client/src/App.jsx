@@ -65,6 +65,7 @@ export default function App() {
   };
 
   const saveDraft = (data) => {
+    if (!user) return;
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
         data,
@@ -116,7 +117,7 @@ export default function App() {
         <AuthHeader user={user} onOpenAuth={() => setShowAuthModal(true)} />
         <WelcomeScreen
           onStart={handleStart}
-          hasDraft={hasDraft}
+          hasDraft={hasDraft && user}
           onResumeDraft={loadDraft}
         />
         {showAuthModal && (
@@ -133,7 +134,7 @@ export default function App() {
     <>
       <AuthHeader user={user} onOpenAuth={() => setShowAuthModal(true)} />
       {/* Draft Resume Banner */}
-      {showDraftBanner && hasDraft && (
+      {showDraftBanner && hasDraft && user && (
         <div style={{
           position: 'fixed', top: 56, left: 0, right: 0, zIndex: 1000,
           background: 'linear-gradient(135deg, rgba(124,58,237,0.95), rgba(6,182,212,0.95))',

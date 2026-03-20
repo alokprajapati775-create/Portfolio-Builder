@@ -6,6 +6,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          framer: ['framer-motion'],
+          utils: ['html2pdf.js', 'qrcode.react']
+        }
+      }
+    }
   },
   server: {
     port: 5173,

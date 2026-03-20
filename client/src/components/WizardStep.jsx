@@ -131,11 +131,39 @@ function PreviewStep({ html, isGenerating, onRegenerate, formData }) {
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ background: '#fff', padding: '6px', borderRadius: '8px' }}>
-            <QRCodeSVG value={`https://portfoliocraft.com/@${(formData.name || 'user').replace(/\s+/g,'').toLowerCase()}`} size={48} />
+            <QRCodeSVG id="portfolio-qr" value={`https://portfoliocraft.com/@${(formData.name || 'user').replace(/\s+/g,'').toLowerCase()}`} size={56} />
           </div>
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Your QR Code</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Scan to preview</div>
+            <button
+               onClick={(e) => {
+                 e.preventDefault();
+                 const svg = document.getElementById('portfolio-qr');
+                 if(!svg) return;
+                 const svgData = new XMLSerializer().serializeToString(svg);
+                 const canvas = document.createElement('canvas');
+                 const ctx = canvas.getContext('2d');
+                 const img = new Image();
+                 img.onload = () => {
+                   canvas.width = 112; 
+                   canvas.height = 112;
+                   ctx.fillStyle = 'white';
+                   ctx.fillRect(0,0,112,112);
+                   ctx.drawImage(img, 16, 16, 80, 80);
+                   const pngFile = canvas.toDataURL('image/png');
+                   const downloadLink = document.createElement('a');
+                   downloadLink.download = `${(formData.name || 'portfolio').replace(/\s+/g,'_')}_QR.png`;
+                   downloadLink.href = pngFile;
+                   downloadLink.click();
+                 };
+                 img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+               }}
+               style={{ fontSize: '0.75rem', color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontWeight: '600', padding: '2px 0' }}
+               onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+               onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+            >
+              📥 Download PNG
+            </button>
           </div>
         </div>
       </div>
@@ -554,24 +582,7 @@ function AnimationModeStep({ formData, updateFormData }) {
         </div>
       )}
 
-      {/* Ambient Sound / Audio Experience */}
-      <div className="audio-control-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="audio-icon-pulse">{formData.soundEnabled ? '🎵' : '🔇'}</div>
-          <div>
-            <div className="audio-title">Atmospheric Presence</div>
-            <div className="audio-desc">Enable subtle ambient sounds for an immersive browsing experience.</div>
-          </div>
-        </div>
-        <div 
-          className={`toggle-switch ${formData.soundEnabled ? 'on' : 'off'}`}
-          onClick={() => updateFormData({ soundEnabled: !formData.soundEnabled })}
-        >
-          <div className="toggle-thumb" />
-          <span className="toggle-label">{formData.soundEnabled ? 'Enabled' : 'Disabled'}</span>
-        </div>
-      </div>
-      
+
       <style>{`
         .animation-mode-step { padding: 4px; }
         .animation-main-card { 
@@ -873,12 +884,12 @@ function ProjectsStep({ formData, updateFormData }) {
   };
 
   const removeProject = (index) => {
-    const updated = formData.projects.filter((_, i) => i !== index);
+    const updated = (formData.projects || []).filter((_, i) => i !== index);
     updateFormData({ projects: updated.length ? updated : [{ title: '', description: '', link: '' }] });
   };
 
   const updateProject = (index, field, value) => {
-    const updated = formData.projects.map((p, i) =>
+    const updated = (formData.projects || []).map((p, i) =>
       i === index ? { ...p, [field]: value } : p
     );
     updateFormData({ projects: updated });
@@ -886,11 +897,11 @@ function ProjectsStep({ formData, updateFormData }) {
 
   return (
     <>
-      {formData.projects.map((project, i) => (
+      {(formData.projects || []).map((project, i) => (
         <div key={i} className="project-input-card">
           <div className="project-input-header">
             <span className="project-input-number">Project #{i + 1}</span>
-            {formData.projects.length > 1 && (
+            {(formData.projects || []).length > 1 && (
               <button className="project-remove-btn" onClick={() => removeProject(i)}>
                 <FiX />
               </button>
@@ -944,7 +955,7 @@ function SkillsStep({ formData, updateFormData }) {
   };
 
   const removeSkill = (index) => {
-    updateFormData({ skills: formData.skills.filter((_, i) => i !== index) });
+    updateFormData({ skills: (formData.skills || []).filter((_, i) => i !== index) });
   };
 
   const handleKeyDown = (e) => {
@@ -983,9 +994,9 @@ function SkillsStep({ formData, updateFormData }) {
         </div>
       </div>
 
-      {formData.skills.length > 0 && (
+      {(formData.skills || []).length > 0 && (
         <div className="tags-container">
-          {formData.skills.map((skill, i) => (
+          {(formData.skills || []).map((skill, i) => (
             <span key={i} className="tag">
               {skill}
               <button className="tag-remove" onClick={() => removeSkill(i)}>×</button>
@@ -1054,7 +1065,7 @@ function SocialsStep({ formData, updateFormData }) {
           <input
             className="form-input"
             placeholder={s.placeholder}
-            value={formData.socials[s.key] || ''}
+            value={(formData.socials || {})[s.key] || ''}
             onChange={(e) => updateSocial(s.key, e.target.value)}
           />
         </div>
