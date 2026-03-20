@@ -112,40 +112,38 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
   const handleShareLink = async () => {
     setIsSharing(true);
     try {
-      const res = await fetch('/api/share', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) throw new Error('Failed to generate share link');
-      const data = await res.json();
-      
-      if (data.url) {
-        setSharedUrl(data.url);
-        updateFormData({ deployedUrl: data.url });
-
-        // Try modern clipboard API
-        try {
-          await navigator.clipboard.writeText(data.url);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 3000);
-        } catch (copyErr) {
-          // Fallback to legacy execCommand for non-HTTPS or incompatible browsers
-          const textArea = document.createElement("textarea");
-          textArea.value = data.url;
-          document.body.appendChild(textArea);
-          textArea.select();
-          try {
-            document.execCommand('copy');
+      // Try server-side first (gives a real shareable URL)
+      try {
+        const res = await fetch('/api/share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) {
+            setSharedUrl(data.url);
+            updateFormData({ deployedUrl: data.url });
+            try { await navigator.clipboard.writeText(data.url); } catch(e) {}
             setCopied(true);
             setTimeout(() => setCopied(false), 3000);
-          } catch (e) { console.error('Fallback copy failed', e); }
-          document.body.removeChild(textArea);
+            return;
+          }
         }
+      } catch (serverErr) {
+        console.warn('Server share unavailable, using client-side fallback');
       }
+
+      // Fallback: generate locally and open in new tab
+      const html = generatePortfolioHTML(formData);
+      const blob = new Blob([html], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      setSharedUrl(blobUrl);
+      window.open(blobUrl, '_blank');
+      setCopied(false);
     } catch (err) {
-      console.error('Sharing failed:', err);
-      alert('Sharing failed: ' + err.message);
+      console.error('Share failed:', err);
+      alert('Failed to generate portfolio link: ' + err.message);
     } finally {
       setIsSharing(false);
     }
@@ -313,26 +311,59 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
           
           {sharedUrl && isPreviewStep && (
             <div style={{ 
-              width: '100%', marginTop: '16px', padding: '12px', background: 'rgba(5,150,105,0.1)', 
-              border: '1px solid rgba(5,150,105,0.3)', borderRadius: '8px', display: 'flex', 
-              alignItems: 'center', gap: '10px', animation: 'fadeIn 0.3s' 
+              width: '100%', marginTop: '16px', padding: '14px', background: 'rgba(5,150,105,0.12)', 
+              border: '1px solid rgba(16,185,129,0.4)', borderRadius: '10px',
             }}>
-              <input 
-                readOnly 
-                value={sharedUrl} 
-                onClick={(e) => e.target.select()}
-                style={{ flex: 1, background: 'none', border: 'none', color: '#10b981', fontSize: '0.85rem', fontWeight: 500 }} 
-              />
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(sharedUrl);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-                style={{ background: '#10b981', border: 'none', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
+              <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600, marginBottom: '8px' }}>
+                {sharedUrl.startsWith('blob:') ? '🎉 Portfolio opened in new tab!' : '🎉 Your portfolio link is ready!'}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input 
+                  readOnly 
+                  value={sharedUrl.startsWith('blob:') ? 'Portfolio opened in a new browser tab →' : sharedUrl} 
+                  onClick={(e) => e.target.select()}
+                  style={{ 
+                    flex: 1, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.3)', 
+                    color: '#fff', fontSize: '0.82rem', fontWeight: 500, padding: '8px 12px', 
+                    borderRadius: '6px', outline: 'none' 
+                  }} 
+                />
+                <button 
+                  onClick={() => window.open(sharedUrl, '_blank')}
+                  style={{ 
+                    background: '#10b981', border: 'none', color: '#fff', padding: '8px 14px', 
+                    borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Open
+                </button>
+                {!sharedUrl.startsWith('blob:') && (
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(sharedUrl);
+                      } catch(e) {
+                        const ta = document.createElement('textarea');
+                        ta.value = sharedUrl;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                      }
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    style={{ 
+                      background: copied ? '#059669' : 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', 
+                      color: '#10b981', padding: '8px 14px', borderRadius: '6px', fontSize: '0.8rem', 
+                      cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {copied ? '✓ Copied' : 'Copy'}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
