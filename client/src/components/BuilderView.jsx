@@ -149,6 +149,19 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
     }
   };
 
+  const handleDownloadHTML = () => {
+    const html = generatePortfolioHTML(formData);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(formData.name || 'portfolio').replace(/\s+/g, '_')}_portfolio.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleDownloadResume = async () => {
     setIsDownloading(true);
     try {
@@ -280,20 +293,27 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
             </span>
           )}
           {isPreviewStep ? (
-            <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
+            <div style={{ display: 'flex', gap: '10px', flex: 1, flexWrap: 'wrap' }}>
               <button
                 className="btn btn-success"
                 onClick={handleShareLink}
                 disabled={isSharing || isGenerating}
-                style={{ flex: 1.5, background: copied ? '#059669' : 'var(--btn-success-bg)', position: 'relative' }}
+                style={{ flex: 1.5, background: copied ? '#059669' : 'var(--btn-success-bg)', position: 'relative', minWidth: '140px' }}
               >
-                {isSharing ? '⚙️ Generating Link...' : copied ? '✅ Link Copied!' : '🔗 Get Shareable Link'}
+                {isSharing ? '⚙️ Generating...' : copied ? '✅ Link Copied!' : '🔗 Get Shareable Link'}
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleDownloadHTML}
+                style={{ flex: 1, minWidth: '120px' }}
+              >
+                📥 Download HTML
               </button>
               <button
                 className="btn btn-primary"
                 onClick={handleDownloadResume}
                 disabled={isDownloading || isGenerating}
-                style={{ flex: 1, background: '#3b82f6', borderColor: '#2563eb' }}
+                style={{ flex: 1, background: '#3b82f6', borderColor: '#2563eb', minWidth: '120px' }}
               >
                 {isDownloading ? '⏳...' : '📄 Get CV (.pdf)'}
               </button>
