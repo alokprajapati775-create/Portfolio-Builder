@@ -22,6 +22,15 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// Portfolio hosting directory
+const portfoliosDir = process.env.VERCEL 
+  ? path.join('/tmp', 'portfolios')
+  : path.join(__dirname, 'portfolios');
+
+if (!fs.existsSync(portfoliosDir)) {
+  fs.mkdirSync(portfoliosDir, { recursive: true });
+}
+
 // Multer config for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
@@ -43,8 +52,9 @@ const upload = multer({
   },
 });
 
-// Serve uploaded files
+// Serve uploaded files and hosted portfolios
 app.use('/api/uploads', express.static(uploadsDir));
+app.use('/api/share', express.static(portfoliosDir));
 
 // Upload profile image
 app.post('/api/upload', upload.single('image'), (req, res) => {
@@ -738,6 +748,26 @@ app.post('/api/generate', (req, res) => {
     }
     const html = generatePortfolioHTML(req.body);
     res.json({ success: true, html });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Share portfolio (host it temporarily and give URL)
+app.post('/api/share', (req, res) => {
+  try {
+    const html = generatePortfolioHTML(req.body);
+    const id = Date.now() + '-' + Math.random().toString(36).substring(7);
+    const filename = `${id}.html`;
+    const filepath = path.join(portfoliosDir, filename);
+    
+    fs.writeFileSync(filepath, html);
+    
+    const host = req.get('host');
+    const protocol = req.protocol;
+    const url = `${protocol}://${host}/api/share/${filename}`;
+    
+    res.json({ success: true, url, id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -10,6 +10,8 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
   const [previewHTML, setPreviewHTML] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
 
   const totalSteps = WIZARD_STEPS.length;
@@ -103,6 +105,33 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
       alert('Failed to generate your portfolio. ' + err.message);
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const handleShareLink = async () => {
+    setIsSharing(true);
+    try {
+      const res = await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) throw new Error('Failed to generate share link');
+      const data = await res.json();
+      
+      if (data.url) {
+        await navigator.clipboard.writeText(data.url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+        
+        // Also update the QR code URL automatically
+        updateFormData({ deployedUrl: data.url });
+      }
+    } catch (err) {
+      console.error('Sharing failed:', err);
+      alert('Sharing failed: ' + err.message);
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -240,11 +269,11 @@ export default function BuilderView({ formData, updateFormData, saveDraft }) {
             <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
               <button
                 className="btn btn-success"
-                onClick={handleDownload}
-                disabled={isDownloading || isGenerating}
-                style={{ flex: 1 }}
+                onClick={handleShareLink}
+                disabled={isSharing || isGenerating}
+                style={{ flex: 1.5, background: copied ? '#059669' : 'var(--btn-success-bg)', position: 'relative' }}
               >
-                {isDownloading ? '⏳...' : '📦 Get Website (.zip)'}
+                {isSharing ? '⚙️ Generating Link...' : copied ? '✅ Link Copied!' : '🔗 Get Shareable Link'}
               </button>
               <button
                 className="btn btn-primary"
