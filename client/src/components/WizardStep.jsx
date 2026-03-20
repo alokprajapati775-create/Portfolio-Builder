@@ -419,27 +419,19 @@ function ThemeSelectionStep({ formData, updateFormData }) {
                             style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
                           >
                             <option value="">Theme Default (Auto)</option>
-                            <option value="'Inter', sans-serif">Inter (Modern & Clean)</option>
-                            <option value="'Space Grotesk', sans-serif">Space Grotesk (Techy)</option>
-                            <option value="'Playfair Display', serif">Playfair Display (Elegant)</option>
-                            <option value="'Fira Code', monospace">Fira Code (Developer)</option>
-                            <option value="'Outfit', sans-serif">Outfit (Geometric)</option>
-                          </select>
-                        </label>
-
-                        {/* Font Animation */}
-                        <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Text Entry Animation</span>
-                          <select 
-                            value={formData.themePalette?.fontAnimation || 'fade-up'}
-                            onChange={(e) => updateFormData({ themePalette: { ...formData.themePalette, fontAnimation: e.target.value } })}
-                            style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
-                          >
-                            <option value="fade-up">Fade Up (Classic)</option>
-                            <option value="blur-reveal">Blur Reveal (Modern)</option>
-                            <option value="slide-right">Slide Right (Dynamic)</option>
-                            <option value="zoom-out">Zoom Out (Impactful)</option>
-                            <option value="3d-flip">3D Flip (Creative)</option>
+                            <optgroup label="Modern Typography">
+                              <option value="'Inter', sans-serif">Inter (Modern & Clean)</option>
+                              <option value="'Space Grotesk', sans-serif">Space Grotesk (Techy)</option>
+                              <option value="'Outfit', sans-serif">Outfit (Geometric)</option>
+                            </optgroup>
+                            <optgroup label="Classic / Microsoft Word">
+                              <option value="Arial, Helvetica, sans-serif">Arial (Classic)</option>
+                              <option value="'Times New Roman', Times, serif">Times New Roman (Formal)</option>
+                              <option value="Calibri, 'Helvetica Neue', Helvetica, sans-serif">Calibri (Clean & Standard)</option>
+                              <option value="'Georgia', serif">Georgia (Elegant Serif)</option>
+                              <option value="'Courier New', Courier, monospace">Courier New (Typewriter)</option>
+                              <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans MS (Casual)</option>
+                            </optgroup>
                           </select>
                         </label>
                       </div>

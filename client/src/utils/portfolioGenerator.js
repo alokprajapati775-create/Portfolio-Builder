@@ -22,6 +22,8 @@ export function generatePortfolioHTML(data) {
   const variant  = data.backgroundVariant || 'aurora-waves';
   const noAnim   = animMode === 'no-animation';
   const a = theme.accent, a2 = theme.accentAlt, ga = hexToGl(a), ga2 = hexToGl(a2);
+  const fontBody = theme.fontFamily || "'Inter',sans-serif";
+  const fontHead = theme.fontFamily || "'Space Grotesk',sans-serif";
 
   /* ── skills / projects / socials ── */
   const skills = (data.skills||[]).map((s,i)=>`<div class="skill-chip reveal" style="transition-delay:${i*60}ms">${s}</div>`).join('');
@@ -210,7 +212,8 @@ export function generatePortfolioHTML(data) {
         // Card body — starts above viewport for physics drop
         var cB=M.Bodies.rectangle(cv.width/2,-200,280,400,{
           render:{visible:false},density:.05,frictionAir:.025,
-          restitution:.25,chamfer:{radius:24}
+          restitution:.25,chamfer:{radius:24},
+          collisionFilter:{group:-1} // Prevents wedging against walls
         });
 
         // Rope anchor — center top
@@ -223,9 +226,9 @@ export function generatePortfolioHTML(data) {
         });
 
         // Boundaries
-        var ground=M.Bodies.rectangle(cv.width/2,cv.height+40,cv.width*3,80,{isStatic:true,render:{visible:false}});
-        var wallL=M.Bodies.rectangle(-40,cv.height/2,80,cv.height*2,{isStatic:true,render:{visible:false}});
-        var wallR=M.Bodies.rectangle(cv.width+40,cv.height/2,80,cv.height*2,{isStatic:true,render:{visible:false}});
+        var ground=M.Bodies.rectangle(cv.width/2,cv.height+40,cv.width*3,80,{isStatic:true,render:{visible:false},collisionFilter:{group:-1}});
+        var wallL=M.Bodies.rectangle(-40,cv.height/2,80,cv.height*2,{isStatic:true,render:{visible:false},collisionFilter:{group:-1}});
+        var wallR=M.Bodies.rectangle(cv.width+40,cv.height/2,80,cv.height*2,{isStatic:true,render:{visible:false},collisionFilter:{group:-1}});
         M.Composite.add(world,[cB,rope,ground,wallL,wallR]);
 
         // BOUNCY BALLS — staggered drop
@@ -421,13 +424,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
   .proj-card{opacity:0;transform:translateY(28px) rotateX(8deg);transition:opacity .7s ease,transform .7s ease,box-shadow .25s ease}
   .proj-card.revealed{opacity:1;transform:translateY(0) rotateX(0)}
 
-  /* Glitch text animation */
-  .glitch{position:relative;display:inline-block}
-  .glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;background:${theme.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-  .glitch::before{left:2px;text-shadow:-2px 0 ${a};animation:glitch1 3s infinite}
-  .glitch::after{left:-2px;text-shadow:2px 0 ${a2};animation:glitch2 3s infinite}
-  @keyframes glitch1{0%,100%{clip-path:inset(100% 0 0 0)}10%{clip-path:inset(15% 0 60% 0)}20%{clip-path:inset(70% 0 10% 0)}30%{clip-path:inset(40% 0 80% 0)}40%{clip-path:inset(0 0 100% 0)}50%{clip-path:inset(100% 0 0 0)}}
-  @keyframes glitch2{0%,100%{clip-path:inset(0 0 100% 0)}15%{clip-path:inset(80% 0 0 0)}25%{clip-path:inset(20% 0 50% 0)}35%{clip-path:inset(60% 0 20% 0)}45%{clip-path:inset(0 0 100% 0)}}
+  /* Glitch text animation removed per request */
 
   /* End of universal config */
   `;
@@ -449,7 +446,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
     background:rgba(${theme.bg==='#ffffff'?'255,255,255':'10,10,26'},.75);backdrop-filter:blur(18px);
     border-bottom:1px solid rgba(255,255,255,.06);transition:all .3s}
   .pf-nav.scrolled{box-shadow:0 4px 30px rgba(0,0,0,.3)}
-  .pf-nav-brand{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:800;color:${theme.text}}
+  .pf-nav-brand{font-family:${fontHead};font-size:1.3rem;font-weight:800;color:${theme.text}}
   .pf-nav-links{display:flex;gap:28px;align-items:center}.pf-nav-links a{color:${theme.textSecondary};text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s}
   .pf-nav-links a:hover{color:${a}}
   #dlToggle{background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text);padding:5px;transition:transform .2s}
@@ -474,19 +471,17 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
     html[data-theme='alt'] { --bg: ${altBg}; --bg2: ${altBg2}; --text: ${altText}; --text2: ${altText2}; --card: ${altCard}; }
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     html{scroll-behavior:smooth}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background 0.4s ease, color 0.4s ease;}
+    body{font-family:${fontBody};background:var(--bg);color:var(--text);overflow-x:hidden;transition:background 0.4s ease, color 0.4s ease;}
     .content{position:relative;z-index:5}
     .section{padding:110px 8% 80px;max-width:1300px;margin:0 auto}
-    .section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.5rem,5vw,3.8rem);font-weight:800;margin-bottom:50px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .section-title{font-family:${fontHead};font-size:clamp(2.5rem,5vw,3.8rem);font-weight:800;margin-bottom:50px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .pf-nav { background: var(--bg) !important; color: var(--text) !important; }
 
     /* Hero */
     .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding-top:100px}
-    .hero-avatar{width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid ${a};margin-bottom:28px;box-shadow:0 0 0 8px ${a}20,0 20px 60px rgba(0,0,0,.4);animation:avatarIn 1s ease .3s both}
-    @keyframes avatarIn{from{opacity:0;transform:scale(.8) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-    .hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(4rem,10vw,8rem);font-weight:800;line-height:.9;margin-bottom:24px;animation:heroTitleIn .9s ease .5s both}
-    @keyframes heroTitleIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-    .hero-bio{font-size:1.3rem;color:var(--text2);max-width:640px;line-height:1.8;margin-bottom:48px;animation:heroTitleIn .9s ease .7s both}
+    .hero-avatar{width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid ${a};margin-bottom:28px;box-shadow:0 0 0 8px ${a}20,0 20px 60px rgba(0,0,0,.4);}
+    .hero h1{font-family:${fontHead};font-size:clamp(4rem,10vw,8rem);font-weight:800;line-height:.9;margin-bottom:24px;}
+    .hero-bio{font-size:1.3rem;color:var(--text2);max-width:640px;line-height:1.8;margin-bottom:48px;}
 
     /* Skills */
     .skills-wrap{display:flex;flex-wrap:wrap;gap:12px}
@@ -498,8 +493,8 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
     .proj-shine{position:absolute;inset:0;pointer-events:none;z-index:1;border-radius:20px}
     .proj-body{position:relative;z-index:2;background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:40px;height:100%;transition:border-color .3s,background .3s}
     .proj-card:hover .proj-body{background:rgba(255,255,255,.07);border-color:${a}44}
-    .proj-num{font-family:'Space Grotesk',sans-serif;font-size:3rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:.3;margin-bottom:12px}
-    .proj-body h3{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:14px}
+    .proj-num{font-family:${fontHead};font-size:3rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:.3;margin-bottom:12px}
+    .proj-body h3{font-family:${fontHead};font-size:1.6rem;font-weight:700;margin-bottom:14px}
     .proj-body p{color:var(--text2);line-height:1.75;font-size:.95rem}
     .proj-link{display:inline-flex;align-items:center;gap:6px;margin-top:22px;color:${a};font-weight:700;text-decoration:none;transition:gap .2s}
     .proj-link:hover{gap:10px}
@@ -521,7 +516,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener
   <div class="content">
     <section class="section hero">
       ${data.profileImageUrl?`<img src="${data.profileImageUrl}" class="hero-avatar" alt="${data.name}"/>`:''}
-      <h1 class="glitch" data-text="${data.name||'Your Name'}">${data.name||'Your Name'}</h1>
+      <h1>${data.name||'Your Name'}</h1>
       <p class="hero-bio">${data.bio||'Building extraordinary digital experiences that leave a lasting impression on the world.'}</p>
     </section>
     ${skills?`<section class="section" id="skills"><h2 class="section-title reveal">Expertise</h2><div class="skills-wrap">${skills}</div></section>`:''}
